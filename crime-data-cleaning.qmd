@@ -12,8 +12,8 @@ agg_crime_ca <- read_csv("crime-data/crime-numbers/Aggravated-assault-California
 agg_crime_fl <- read_csv("crime-data/crime-numbers/Aggravated-assault-Florida.csv")
 agg_crime_ny <- read_csv("crime-data/crime-numbers/Aggravated-assault-New-York.csv")
 agg_crime_mi <- read_csv("crime-data/crime-numbers/Aggravated-assault-Michigan.csv")
-agg_crime_pa <- read_csv("crime-data/crime-numbers/Aggravated-assault-Pennsylvania.csv")
-agg_crime_tx <- read_csv("crime-data/crime-numbers/Aggravated-assault-Texas.csv")
+agg_crime_oh <- read_csv("crime-data/crime-numbers/Aggravated-assault-Ohio.csv")
+agg_crime_ut <- read_csv("crime-data/crime-numbers/Aggravated-assault-Utah.csv")
 agg_crime_us <- read_csv("crime-data/crime-numbers/Aggravated-assault-US.csv")
 
 
@@ -23,8 +23,8 @@ hom_crime_ca <- read_csv("crime-data/crime-numbers/Homicide-California.csv")
 hom_crime_fl <- read_csv("crime-data/crime-numbers/Homicide-Florida.csv")
 hom_crime_ny <- read_csv("crime-data/crime-numbers/Homicide-New-York.csv")
 hom_crime_mi <- read_csv("crime-data/crime-numbers/Homicide-Michigan.csv")
-hom_crime_pa <- read_csv("crime-data/crime-numbers/Homicide-Pennsylvania.csv")
-hom_crime_tx <- read_csv("crime-data/crime-numbers/Homicide-Texas.csv")
+hom_crime_oh <- read_csv("crime-data/crime-numbers/Homicide-Ohio.csv")
+hom_crime_ut <- read_csv("crime-data/crime-numbers/Homicide-Utah.csv")
 hom_crime_us <- read_csv("crime-data/crime-numbers/Homicide-US.csv")
 ```
 
@@ -38,9 +38,13 @@ rp_crime_ca <- read_csv("crime-data/crime-numbers/Rape-California.csv")
 rp_crime_fl <- read_csv("crime-data/crime-numbers/Rape-Florida.csv")
 rp_crime_ny <- read_csv("crime-data/crime-numbers/Rape-New-York.csv")
 rp_crime_mi <- read_csv("crime-data/crime-numbers/Rape-Michigan.csv")
-rp_crime_pa <- read_csv("crime-data/crime-numbers/Rape-Pennsylvania.csv")
-rp_crime_tx <- read_csv("crime-data/crime-numbers/Rape-Texas.csv")
+rp_crime_oh <- read_csv("crime-data/crime-numbers/Rape-Ohio.csv")
+rp_crime_ut <- read_csv("crime-data/crime-numbers/Rape-Utah.csv")
 rp_crime_us <- read_csv("crime-data/crime-numbers/Rape-US.csv")
+```
+
+```{r}
+library(tidyverse)
 
 # Load Robbery Data
 
@@ -48,15 +52,14 @@ rob_crime_ca <- read_csv("crime-data/crime-numbers/Robbery-California.csv")
 rob_crime_fl <- read_csv("crime-data/crime-numbers/Robbery-Florida.csv")
 rob_crime_ny <- read_csv("crime-data/crime-numbers/Robbery-New-York.csv")
 rob_crime_mi <- read_csv("crime-data/crime-numbers/Robbery-Michigan.csv")
-rob_crime_pa <- read_csv("crime-data/crime-numbers/Robbery-Pennsylvania.csv")
-rob_crime_tx <- read_csv("crime-data/crime-numbers/Robbery-Texas.csv")
+rob_crime_oh <- read_csv("crime-data/crime-numbers/Robbery-Ohio.csv")
+rob_crime_ut <- read_csv("crime-data/crime-numbers/Robbery-Utah.csv")
 rob_crime_us <- read_csv("crime-data/crime-numbers/Robbery-US.csv")
 ```
 
 
-
 ```{r}
-list_df_agg <- list(agg_crime_ca, agg_crime_fl, agg_crime_ny, agg_crime_mi, agg_crime_pa, agg_crime_tx, agg_crime_us)
+list_df_agg <- list(agg_crime_ca, agg_crime_fl, agg_crime_ny, agg_crime_mi, agg_crime_oh, agg_crime_ut, agg_crime_us)
 
 # Create tibble to hold all aggravated assault data
 full_df_agg <- tibble(
@@ -82,8 +85,9 @@ for (i in list_df_agg){
 
 ```
 
+
 ```{r}
-list_df_hom <- list(hom_crime_ca, hom_crime_fl, hom_crime_ny, hom_crime_mi, hom_crime_pa, hom_crime_tx, hom_crime_us)
+list_df_hom <- list(hom_crime_ca, hom_crime_fl, hom_crime_ny, hom_crime_mi, hom_crime_oh, hom_crime_ut, hom_crime_us)
 
 # Create tibble to hold all Homicide data
 full_df_hom <- tibble(
@@ -110,7 +114,7 @@ for (i in list_df_hom){
 
 ```{r}
 
-list_df_rp <- list(rp_crime_ca, rp_crime_fl, rp_crime_ny, rp_crime_mi, rp_crime_pa, rp_crime_tx, rp_crime_us)
+list_df_rp <- list(rp_crime_ca, rp_crime_fl, rp_crime_ny, rp_crime_mi, rp_crime_oh, rp_crime_ut, rp_crime_us)
 
 # Create tibble to hold all Rape data
 full_df_rp <- tibble(
@@ -138,7 +142,7 @@ for (i in list_df_rp){
 
 ```{r}
 
-list_df_rob <- list(rob_crime_ca, rob_crime_fl, rob_crime_ny, rob_crime_mi, rob_crime_pa, rob_crime_tx, rob_crime_us)
+list_df_rob <- list(rob_crime_ca, rob_crime_fl, rob_crime_ny, rob_crime_mi, rob_crime_oh, rob_crime_ut, rob_crime_us)
 
 # Create tibble to hold all Robbery data
 full_df_rob <- tibble(
