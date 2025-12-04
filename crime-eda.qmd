@@ -1,0 +1,71 @@
+---
+title: "DSAN 5100 Project. Crime Data EDA"
+author: Pavlos Baffes
+format: html
+---
+
+```{r}
+
+#Pull in proper libraries
+library(tidyverse)
+library(ggplot2)
+library(plotly)
+
+#Pull in cleaned crime data
+
+crime_data <- read_csv('data/processed-data/crime_data_clean.csv')
+
+```
+
+```{r}
+# Distributions of crime rates
+
+# Plot boxplot of violent crime rates per month of each state and the nation
+
+ggplot(crime_data, aes(x=State, y=violent_crime_rate))+
+geom_boxplot(aes(fill = State), color = "black", alpha = 0.7)+
+labs(
+    title = "Distribution of Violent Crime by State and Nation",
+    x = "States + US",
+    y = "Crime per 100k",
+    subtitle = "State and National level monthly data aggregated from 1986-2025"
+) +
+theme_minimal() +
+scale_fill_brewer(palette = "Pastel1")
+
+
+```
+
+```{r}
+
+# Plot boxplot of Aggravated Assault crime rates per month of each state and the nation
+
+ggplot(crime_data, aes(x=State, y=aggravated_assault_rate))+
+geom_boxplot(aes(fill = State), color = "black", alpha = 0.7)+
+labs(
+    title = "Distribution of Aggravated Assault by State and Nation",
+    x = "States + US",
+    y = "Crime per 100k",
+    subtitle = "State and National level monthly data aggregated from 1986-2025"
+) +
+theme_minimal() +
+scale_fill_brewer(palette = "Pastel1")
+
+```
+
+```{r}
+
+# Plot boxplot of Homicide crime rates per month of each state and the nation
+
+ggplot(crime_data, aes(x=State, y=homicide_rate))+
+geom_boxplot(aes(fill = State), color = "black", alpha = 0.7)+
+labs(
+    title = "Distribution of Homicide by State and Nation",
+    x = "States + US",
+    y = "Crime per 100k",
+    subtitle = "State and National level monthly data aggregated from 1986-2025"
+) +
+theme_minimal() +
+scale_fill_brewer(palette = "Pastel1")
+
+```
