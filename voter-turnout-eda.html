@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Group 6">
+<meta name="dcterms.date" content="2025-12-04">
+
+<title>Voter Turnout Exploratory Data Analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="voter-turnout-eda_files/libs/clipboard/clipboard.min.js"></script>
+<script src="voter-turnout-eda_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="voter-turnout-eda_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="voter-turnout-eda_files/libs/quarto-html/popper.min.js"></script>
+<script src="voter-turnout-eda_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="voter-turnout-eda_files/libs/quarto-html/anchor.min.js"></script>
+<link href="voter-turnout-eda_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="voter-turnout-eda_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="voter-turnout-eda_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="voter-turnout-eda_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="voter-turnout-eda_files/libs/bootstrap/bootstrap-8a894fcc3cb5e37eb5bf30def131be2f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="voter-turnout-eda_files/libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet">
+<script src="voter-turnout-eda_files/libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<script src="voter-turnout-eda_files/libs/plotly-binding-4.11.0/plotly.js"></script>
+<script src="voter-turnout-eda_files/libs/typedarray-0.1/typedarray.min.js"></script>
+<script src="voter-turnout-eda_files/libs/jquery-3.5.1/jquery.min.js"></script>
+<link href="voter-turnout-eda_files/libs/crosstalk-1.2.2/css/crosstalk.min.css" rel="stylesheet">
+<script src="voter-turnout-eda_files/libs/crosstalk-1.2.2/js/crosstalk.min.js"></script>
+<link href="voter-turnout-eda_files/libs/plotly-htmlwidgets-css-2.11.1/plotly-htmlwidgets.css" rel="stylesheet">
+<script src="voter-turnout-eda_files/libs/plotly-main-2.11.1/plotly-latest.min.js"></script>
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup">Setup</a></li>
+  <li><a href="#load-data" id="toc-load-data" class="nav-link" data-scroll-target="#load-data">Load Data</a></li>
+  <li><a href="#data-overview" id="toc-data-overview" class="nav-link" data-scroll-target="#data-overview">Data Overview</a></li>
+  <li><a href="#visualizations" id="toc-visualizations" class="nav-link" data-scroll-target="#visualizations">Visualizations</a>
+  <ul class="collapse">
+  <li><a href="#turnout-over-time" id="toc-turnout-over-time" class="nav-link" data-scroll-target="#turnout-over-time">Turnout Over Time</a></li>
+  <li><a href="#turnout-by-election-type" id="toc-turnout-by-election-type" class="nav-link" data-scroll-target="#turnout-by-election-type">Turnout by Election Type</a></li>
+  <li><a href="#state-comparisons" id="toc-state-comparisons" class="nav-link" data-scroll-target="#state-comparisons">State Comparisons</a></li>
+  <li><a href="#voter-turnout-trends-by-state" id="toc-voter-turnout-trends-by-state" class="nav-link" data-scroll-target="#voter-turnout-trends-by-state">Voter Turnout Trends by State</a></li>
+  </ul></li>
+  <li><a href="#statistical-summary" id="toc-statistical-summary" class="nav-link" data-scroll-target="#statistical-summary">Statistical Summary</a></li>
+  <li><a href="#normalized-turnout-analysis" id="toc-normalized-turnout-analysis" class="nav-link" data-scroll-target="#normalized-turnout-analysis">Normalized Turnout Analysis</a>
+  <ul class="collapse">
+  <li><a href="#normalized-turnout-over-time" id="toc-normalized-turnout-over-time" class="nav-link" data-scroll-target="#normalized-turnout-over-time">Normalized Turnout Over Time</a></li>
+  <li><a href="#distribution-of-normalized-turnout" id="toc-distribution-of-normalized-turnout" class="nav-link" data-scroll-target="#distribution-of-normalized-turnout">Distribution of Normalized Turnout</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Voter Turnout Exploratory Data Analysis</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Group 6 </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">December 4, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="setup" class="level1">
+<h1>Setup</h1>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(plotly)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Define consistent state colors</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>state_colors <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"California"</span> <span class="ot">=</span> <span class="st">"#FDB927"</span>,    <span class="co"># Gold (Golden State)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Florida"</span> <span class="ot">=</span> <span class="st">"#FF8C00"</span>,        <span class="co"># Dark Orange (Sunshine State)</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Michigan"</span> <span class="ot">=</span> <span class="st">"#00274C"</span>,       <span class="co"># Navy Blue (University of Michigan)</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"New York"</span> <span class="ot">=</span> <span class="st">"#003DA5"</span>,       <span class="co"># Royal Blue (NY blue)</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Ohio"</span> <span class="ot">=</span> <span class="st">"#BB0000"</span>,           <span class="co"># Scarlet Red (Ohio State)</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Utah"</span> <span class="ot">=</span> <span class="st">"#8B4513"</span>            <span class="co"># Saddle Brown (Red rock landscape)</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="load-data" class="level1">
+<h1>Load Data</h1>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load cleaned voter turnout data for selected states</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>voter_turnout <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/processed-data/voter_turnout_selected_states.csv"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Preview data</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(voter_turnout)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 12
+   year state     state_abv total_ballots_counted    vap    vep vap_turnout_rate
+  &lt;dbl&gt; &lt;chr&gt;     &lt;chr&gt;                     &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;            &lt;dbl&gt;
+1  2024 Californ… CA                     16140044 3.06e7 2.60e7            0.527
+2  2024 Florida   FL                     11004209 1.87e7 1.65e7            0.590
+3  2024 Michigan  MI                      5706503 7.96e6 7.65e6            0.717
+4  2024 New York  NY                      8381429 1.56e7 1.39e7            0.538
+5  2024 Ohio      OH                      5851387 9.26e6 8.95e6            0.632
+6  2024 Utah      UT                      1525885 2.55e6 2.38e6            0.599
+# ℹ 5 more variables: vep_turnout_rate &lt;dbl&gt;, election_type &lt;chr&gt;,
+#   mean_vep_turnout &lt;dbl&gt;, normalized_vep_turnout &lt;dbl&gt;, state_color &lt;chr&gt;</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(voter_turnout)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 138
+Columns: 12
+$ year                   &lt;dbl&gt; 2024, 2024, 2024, 2024, 2024, 2024, 2022, 2022,…
+$ state                  &lt;chr&gt; "California", "Florida", "Michigan", "New York"…
+$ state_abv              &lt;chr&gt; "CA", "FL", "MI", "NY", "OH", "UT", "CA", "FL",…
+$ total_ballots_counted  &lt;dbl&gt; 16140044, 11004209, 5706503, 8381429, 5851387, …
+$ vap                    &lt;dbl&gt; 30601993, 18664571, 7959215, 15566053, 9261250,…
+$ vep                    &lt;dbl&gt; 26008952, 16494837, 7645405, 13867180, 8947886,…
+$ vap_turnout_rate       &lt;dbl&gt; 0.5274, 0.5896, 0.7170, 0.5384, 0.6318, 0.5995,…
+$ vep_turnout_rate       &lt;dbl&gt; 0.6206, 0.6671, 0.7464, 0.6044, 0.6539, 0.6415,…
+$ election_type          &lt;chr&gt; "presidential", "presidential", "presidential",…
+$ mean_vep_turnout       &lt;dbl&gt; 0.5931500, 0.4712620, 0.6470333, 0.5690250, 0.6…
+$ normalized_vep_turnout &lt;dbl&gt; 0.027450000, 0.195837965, 0.099366667, 0.035375…
+$ state_color            &lt;chr&gt; "blue", "red", "purple", "blue", "purple", "red…</code></pre>
+</div>
+</div>
+</section>
+<section id="data-overview" class="level1">
+<h1>Data Overview</h1>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary statistics</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(voter_turnout)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>      year         state            state_abv         total_ballots_counted
+ Min.   :1980   Length:138         Length:138         Min.   :  445499     
+ 1st Qu.:1990   Class :character   Class :character   1st Qu.: 3290234     
+ Median :2002   Mode  :character   Mode  :character   Median : 4772300     
+ Mean   :2002                                         Mean   : 5395646     
+ 3rd Qu.:2014                                         3rd Qu.: 7497546     
+ Max.   :2024                                         Max.   :17785151     
+      vap                vep           vap_turnout_rate   vep_turnout_rate  
+ Min.   :  934767   Min.   :  915137   Min.   :0.002346   Min.   :0.003554  
+ 1st Qu.: 7461143   1st Qu.: 7100648   1st Qu.:0.386000   1st Qu.:0.432525  
+ Median : 9125234   Median : 8769083   Median :0.482050   Median :0.534650  
+ Mean   :11711221   Mean   :10374587   Mean   :0.462706   Mean   :0.504313  
+ 3rd Qu.:15428129   3rd Qu.:13489058   3rd Qu.:0.558900   3rd Qu.:0.604475  
+ Max.   :30601993   Max.   :26008952   Max.   :0.717000   Max.   :0.746400  
+ election_type      mean_vep_turnout normalized_vep_turnout state_color       
+ Length:138         Min.   :0.3245   Min.   :-0.466361      Length:138        
+ Class :character   1st Qu.:0.4353   1st Qu.:-0.037251      Class :character  
+ Mode  :character   Median :0.4739   Median : 0.007078      Mode  :character  
+                    Mean   :0.5043   Mean   : 0.000000                        
+                    3rd Qu.:0.6101   3rd Qu.: 0.053940                        
+                    Max.   :0.6470   Max.   : 0.236638                        </code></pre>
+</div>
+</div>
+</section>
+<section id="visualizations" class="level1">
+<h1>Visualizations</h1>
+<section id="turnout-over-time" class="level2">
+<h2 class="anchored" data-anchor-id="turnout-over-time">Turnout Over Time</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># VEP turnout rate over time by state</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_ly</span>(voter_turnout, <span class="at">x =</span> <span class="sc">~</span>year, <span class="at">y =</span> <span class="sc">~</span>vep_turnout_rate, <span class="at">color =</span> <span class="sc">~</span>state,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">colors =</span> state_colors,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">type =</span> <span class="st">'scatter'</span>, <span class="at">mode =</span> <span class="st">'lines+markers'</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">line =</span> <span class="fu">list</span>(<span class="at">width =</span> <span class="dv">2</span>),</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">marker =</span> <span class="fu">list</span>(<span class="at">size =</span> <span class="dv">6</span>),</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        <span class="at">hovertemplate =</span> <span class="fu">paste0</span>(</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>          <span class="st">'&lt;b&gt;%{fullData.name}&lt;/b&gt;&lt;br&gt;'</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>          <span class="st">'Year: %{x}&lt;br&gt;'</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>          <span class="st">'Turnout: %{y:.1%}&lt;br&gt;'</span>,</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>          <span class="st">'&lt;extra&gt;&lt;/extra&gt;'</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        )) <span class="sc">%&gt;%</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">layout</span>(</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="fu">list</span>(</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">text =</span> <span class="st">"Voter Turnout Rate Over Time by State&lt;br&gt;&lt;sub&gt;Voting Eligible Population (VEP) Turnout Rate, 1980-2024&lt;/sub&gt;"</span>,</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">x =</span> <span class="dv">0</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">xaxis =</span> <span class="fu">list</span>(<span class="at">title =</span> <span class="st">"Year"</span>),</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">yaxis =</span> <span class="fu">list</span>(<span class="at">title =</span> <span class="st">"VEP Turnout Rate"</span>, <span class="at">tickformat =</span> <span class="st">".0%"</span>),</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">hovermode =</span> <span class="st">"closest"</span>,</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend =</span> <span class="fu">list</span>(<span class="at">title =</span> <span class="fu">list</span>(<span class="at">text =</span> <span class="st">"State"</span>))</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="plotly html-widget html-fill-item" id="htmlwidget-6bf9552b1a666df6be1a" style="width:100%;height:464px;"></div>
+<script type="application/json" data-for="htmlwidget-6bf9552b1a666df6be1a">{"x":{"visdat":{"109946a669282":["function () ","plotlyVisDat"]},"cur_data":"109946a669282","attrs":{"109946a669282":{"x":{},"y":{},"mode":"lines+markers","line":{"width":2},"marker":{"size":6},"hovertemplate":"<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","color":{},"colors":["#FDB927","#FF8C00","#00274C","#003DA5","#BB0000","#8B4513"],"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"scatter"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"title":{"text":"Voter Turnout Rate Over Time by State<br><sub>Voting Eligible Population (VEP) Turnout Rate, 1980-2024<\/sub>","x":0},"xaxis":{"domain":[0,1],"automargin":true,"title":"Year"},"yaxis":{"domain":[0,1],"automargin":true,"title":"VEP Turnout Rate","tickformat":".0%"},"hovermode":"closest","legend":{"title":{"text":"State"}},"showlegend":true},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"x":[2024,2022,2020,2018,2016,2014,2012,2010,2008,2006,2004,2002,2000,1998,1996,1994,1992,1990,1988,1986,1984,1982,1980],"y":[0.62060000000000004,0.42980000000000002,0.68830000000000002,0.48930000000000001,0.58309999999999995,0.30779999999999996,0.5585,0.46129999999999999,0.61709999999999998,0.4159000000000001,0.59849999999999992,0.377,0.55959999999999999,0.4471,0.55020000000000002,0.48139999999999999,0.61580000000000001,0.43530000000000002,0.57450000000000001,0.44400000000000001,0.58960000000000001,0.499,0.56200000000000006],"mode":"lines+markers","line":{"color":"rgba(253,185,39,1)","width":2},"marker":{"color":"rgba(253,185,39,1)","size":6,"line":{"color":"rgba(253,185,39,1)"}},"hovertemplate":["<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>"],"type":"scatter","name":"California","textfont":{"color":"rgba(253,185,39,1)"},"error_y":{"color":"rgba(253,185,39,1)"},"error_x":{"color":"rgba(253,185,39,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2024,2022,2020,2018,2016,2014,2012,2010,2008,2006,2004,2002,2000,1998,1996,1994,1992,1990,1988,1986,1984,1982,1980],"y":[0.66710000000000003,0.48749999999999999,0.70790000000000008,0.54430000000000001,0.65720000000000001,0.43049999999999999,0.63319999999999999,0.42209999999999998,0.66649999999999987,0.39710000000000001,0.64280000000000004,0.45290000000000008,0.5605,0.3844999999999999,0.53249999999999997,0.43869999999999998,0.57210000000000005,0.0038612187300000001,0.0049010173599999896,0.0040910997099999997,0.0052407493099999999,0.0035543944499999902,0.0052026481899999999],"mode":"lines+markers","line":{"color":"rgba(255,140,0,1)","width":2},"marker":{"color":"rgba(255,140,0,1)","size":6,"line":{"color":"rgba(255,140,0,1)"}},"hovertemplate":["<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>"],"type":"scatter","name":"Florida","textfont":{"color":"rgba(255,140,0,1)"},"error_y":{"color":"rgba(255,140,0,1)"},"error_x":{"color":"rgba(255,140,0,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2024,2022,2020,2018,2016,2014,2012,2010,2008,2006,2004,2002,2000,1998,1996,1994,1992,1990,1988,1986,1984,1982,1980],"y":[0.74639999999999995,0.59130000000000005,0.73269999999999991,0.57620000000000005,0.65540000000000009,0.43169999999999997,0.65249999999999997,0.45079999999999998,0.69679999999999997,0.53420000000000001,0.67669999999999986,0.45079999999999998,0.60449999999999993,0.44879999999999998,0.56230000000000002,0.46339999999999998,0.64000000000000001,0.39460000000000001,0.56659999999999999,0.37849999999999995,0.60650000000000004,0.49299999999999999,0.624],"mode":"lines+markers","line":{"color":"rgba(0,39,76,1)","width":2},"marker":{"color":"rgba(0,39,76,1)","size":6,"line":{"color":"rgba(0,39,76,1)"}},"hovertemplate":["<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>"],"type":"scatter","name":"Michigan","textfont":{"color":"rgba(0,39,76,1)"},"error_y":{"color":"rgba(0,39,76,1)"},"error_x":{"color":"rgba(0,39,76,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2024,2022,2020,2018,2016,2014,2012,2010,2008,2006,2004,2002,2000,1998,1996,1994,1992,1990,1988,1986,1984,1982,1980],"y":[0.60439999999999994,0.42580000000000001,0.61709999999999998,0.45260000000000006,0.57569999999999999,0.2913,0.53510000000000002,0.36349999999999993,0.59650000000000003,0.36949999999999994,0.58920000000000006,0.37359999999999999,0.56159999999999999,0.40710000000000002,0.52910000000000001,0.43690000000000007,0.57820000000000005,0.34960000000000002,0.53969999999999996,0.36530000000000001,0.57230000000000003,0.44879999999999998,0.52939999999999998],"mode":"lines+markers","line":{"color":"rgba(0,61,165,1)","width":2},"marker":{"color":"rgba(0,61,165,1)","size":6,"line":{"color":"rgba(0,61,165,1)"}},"hovertemplate":["<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>"],"type":"scatter","name":"New York","textfont":{"color":"rgba(0,61,165,1)"},"error_y":{"color":"rgba(0,61,165,1)"},"error_x":{"color":"rgba(0,61,165,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2024,2022,2020,2018,2016,2014,2012,2010,2008,2006,2004,2002,2000,1998,1996,1994,1992,1990,1988,1986,1984,1982,1980],"y":[0.65390000000000004,0.47199999999999998,0.67079999999999995,0.51029999999999998,0.64019999999999999,0.36190000000000005,0.65129999999999999,0.46179999999999999,0.67819999999999991,0.49530000000000002,0.68069999999999997,0.40200000000000002,0.5786,0.4289,0.56640000000000001,0.43540000000000001,0.62539999999999996,0.45400000000000001,0.57230000000000003,0.4663000000000001,0.60319999999999996,0.46189999999999998,0.5736],"mode":"lines+markers","line":{"color":"rgba(187,0,0,1)","width":2},"marker":{"color":"rgba(187,0,0,1)","size":6,"line":{"color":"rgba(187,0,0,1)"}},"hovertemplate":["<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>"],"type":"scatter","name":"Ohio","textfont":{"color":"rgba(187,0,0,1)"},"error_y":{"color":"rgba(187,0,0,1)"},"error_x":{"color":"rgba(187,0,0,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2024,2022,2020,2018,2016,2014,2012,2010,2008,2006,2004,2002,2000,1998,1996,1994,1992,1990,1988,1986,1984,1982,1980],"y":[0.64149999999999996,0.47349999999999992,0.67220000000000002,0.5151,0.58030000000000004,0.30419999999999997,0.56169999999999998,0.36799999999999999,0.57090000000000007,0.35930000000000001,0.60970000000000002,0.38090000000000002,0.54649999999999999,0.36659999999999998,0.52070000000000005,0.42649999999999999,0.67500000000000004,0.42190000000000005,0.63419999999999999,0.435,0.64280000000000004,0.55820000000000003,0.6661999999999999],"mode":"lines+markers","line":{"color":"rgba(139,69,19,1)","width":2},"marker":{"color":"rgba(139,69,19,1)","size":6,"line":{"color":"rgba(139,69,19,1)"}},"hovertemplate":["<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Turnout: %{y:.1%}<br><extra><\/extra>"],"type":"scatter","name":"Utah","textfont":{"color":"rgba(139,69,19,1)"},"error_y":{"color":"rgba(139,69,19,1)"},"error_x":{"color":"rgba(139,69,19,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+<p><strong>Key Observations:</strong></p>
+<ul>
+<li><strong>Presidential election spikes</strong>: All states show clear peaks in turnout during presidential election years (divisible by 4), with notably higher turnout in 2020 and 2024.</li>
+<li><strong>Midterm drops</strong>: Midterm elections consistently show lower turnout across all states, typically 15-25 percentage points below presidential years.</li>
+<li><strong>State variations</strong>: Michigan and Ohio tend to have higher overall turnout rates, while California and New York show lower average participation.</li>
+<li><strong>Recent trends</strong>: Most states experienced increased turnout in 2020 and 2024 compared to previous presidential elections, potentially reflecting increased political engagement.</li>
+</ul>
+</section>
+<section id="turnout-by-election-type" class="level2">
+<h2 class="anchored" data-anchor-id="turnout-by-election-type">Turnout by Election Type</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Presidential vs Midterm elections - Overall</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(voter_turnout, <span class="fu">aes</span>(<span class="at">x =</span> election_type, <span class="at">y =</span> vep_turnout_rate,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">fill =</span> election_type)) <span class="sc">+</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Voter Turnout: Presidential vs Midterm Elections"</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Election Type"</span>,</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"VEP Turnout Rate"</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">percent_format</span>()) <span class="sc">+</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="voter-turnout-eda_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Key Observations:</strong></p>
+<ul>
+<li><strong>Substantial gap</strong>: Presidential elections show a median turnout around 60-65%, while midterm elections show approximately 40-45% turnout.</li>
+<li><strong>Statistical significance</strong>: The clear separation between the two distributions suggests a statistically significant difference in turnout between election types.</li>
+<li><strong>Variability</strong>: Presidential elections show slightly more variability (wider spread) in turnout rates compared to midterms.</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Presidential vs Midterm elections - By State</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(voter_turnout, <span class="fu">aes</span>(<span class="at">x =</span> election_type, <span class="at">y =</span> vep_turnout_rate,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">fill =</span> election_type)) <span class="sc">+</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>state, <span class="at">ncol =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Voter Turnout: Presidential vs Midterm Elections by State"</span>,</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Comparing election types across six selected states"</span>,</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Election Type"</span>,</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"VEP Turnout Rate"</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">percent_format</span>()) <span class="sc">+</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"bottom"</span>,</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>)</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="voter-turnout-eda_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Key Observations:</strong></p>
+<ul>
+<li><strong>Consistent patterns across states</strong>: All six states show the same presidential-midterm gap, confirming this is a national pattern rather than state-specific.</li>
+<li><strong>Michigan leads</strong>: Michigan shows the highest median turnout for both presidential and midterm elections among the selected states.</li>
+<li><strong>California variation</strong>: California shows the largest spread in turnout rates, particularly for midterm elections, suggesting more volatility in voter engagement.</li>
+<li><strong>Florida data issues</strong>: Florida’s boxplot clearly shows outliers at near-zero turnout (the 1980-1990 data quality issue), visible as extreme lower outliers in the presidential election box.</li>
+<li><strong>State-specific differences</strong>: While the presidential-midterm gap is consistent, the absolute turnout levels vary significantly by state, with Michigan and Ohio outperforming California and New York.</li>
+</ul>
+</section>
+<section id="state-comparisons" class="level2">
+<h2 class="anchored" data-anchor-id="state-comparisons">State Comparisons</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Average turnout by state</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>avg_turnout_by_state <span class="ot">&lt;-</span> voter_turnout <span class="sc">%&gt;%</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(state) <span class="sc">%&gt;%</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">avg_turnout =</span> <span class="fu">mean</span>(vep_turnout_rate, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_turnout))</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(avg_turnout_by_state, <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(state, avg_turnout),</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">y =</span> avg_turnout, <span class="at">fill =</span> state)) <span class="sc">+</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Average Voter Turnout by State (1980-2024)"</span>,</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"State"</span>,</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Average VEP Turnout Rate"</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> state_colors) <span class="sc">+</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">percent_format</span>()) <span class="sc">+</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"none"</span>,</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">0</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>)</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="voter-turnout-eda_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Key Observations:</strong></p>
+<ul>
+<li><strong>Michigan leads</strong> with the highest average turnout at approximately 59%, followed closely by Ohio at around 57%.</li>
+<li><strong>Geographic pattern</strong>: Midwest states (Michigan, Ohio) show higher average turnout than coastal states (California, New York) in this sample.</li>
+<li><strong>California ranks lowest</strong> among the selected states with an average turnout near 51%, despite being the most populous state.</li>
+</ul>
+</section>
+<section id="voter-turnout-trends-by-state" class="level2">
+<h2 class="anchored" data-anchor-id="voter-turnout-trends-by-state">Voter Turnout Trends by State</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(voter_turnout, <span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> vep_turnout_rate, <span class="at">color =</span> election_type)) <span class="sc">+</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">1.5</span>) <span class="sc">+</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>state, <span class="at">ncol =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Voter Turnout Trends by State"</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Year"</span>,</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"VEP Turnout Rate"</span>,</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"Election Type"</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">percent_format</span>()) <span class="sc">+</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="voter-turnout-eda_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Key Observations:</strong></p>
+<ul>
+<li><strong>Universal cyclical pattern</strong>: All states exhibit the same sawtooth pattern of high presidential turnout followed by lower midterm turnout, confirming this is a systemic national phenomenon.</li>
+<li><strong>2020-2024 surge</strong>: Most states show a notable increase in turnout for the 2020 and 2024 presidential elections compared to historical averages, with some states reaching their highest recorded turnout levels.</li>
+<li><strong>Declining midterm trend</strong>: Several states (particularly California and New York) show a slight downward trend in midterm election turnout over the past two decades.</li>
+<li><strong>State-specific volatility</strong>: California shows more variation in midterm turnout compared to other states, while Michigan’s turnout appears more stable over time.</li>
+<li><strong>Recent convergence</strong>: In 2020 and 2024, state turnout rates appear to be converging, with less variation between states than in earlier decades.</li>
+</ul>
+</section>
+</section>
+<section id="statistical-summary" class="level1">
+<h1>Statistical Summary</h1>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary by state and election type</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>voter_turnout <span class="sc">%&gt;%</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(state, election_type) <span class="sc">%&gt;%</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">observations =</span> <span class="fu">n</span>(),</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_turnout =</span> <span class="fu">mean</span>(vep_turnout_rate, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">median_turnout =</span> <span class="fu">median</span>(vep_turnout_rate, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_turnout =</span> <span class="fu">sd</span>(vep_turnout_rate, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(state, election_type)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 12 × 6
+   state      election_type observations mean_turnout median_turnout sd_turnout
+   &lt;chr&gt;      &lt;chr&gt;                &lt;int&gt;        &lt;dbl&gt;          &lt;dbl&gt;      &lt;dbl&gt;
+ 1 California midterm                 11        0.435          0.444     0.0548
+ 2 California presidential            12        0.593          0.586     0.0388
+ 3 Florida    midterm                 11        0.324          0.422     0.210 
+ 4 Florida    presidential            12        0.471          0.603     0.285 
+ 5 Michigan   midterm                 11        0.474          0.451     0.0687
+ 6 Michigan   presidential            12        0.647          0.646     0.0590
+ 7 New York   midterm                 11        0.389          0.374     0.0495
+ 8 New York   presidential            12        0.569          0.574     0.0303
+ 9 Ohio       midterm                 11        0.450          0.462     0.0418
+10 Ohio       presidential            12        0.625          0.633     0.0440
+11 Utah       midterm                 11        0.419          0.422     0.0745
+12 Utah       presidential            12        0.610          0.622     0.0528</code></pre>
+</div>
+</div>
+</section>
+<section id="normalized-turnout-analysis" class="level1">
+<h1>Normalized Turnout Analysis</h1>
+<p>The normalized VEP turnout rate represents how much each election’s turnout deviates from that state’s average for that election type (presidential or midterm). Positive values indicate above-average turnout, while negative values indicate below-average turnout.</p>
+<section id="normalized-turnout-over-time" class="level2">
+<h2 class="anchored" data-anchor-id="normalized-turnout-over-time">Normalized Turnout Over Time</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Interactive plot of normalized turnout over time</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_ly</span>(voter_turnout, <span class="at">x =</span> <span class="sc">~</span>year, <span class="at">y =</span> <span class="sc">~</span>normalized_vep_turnout, <span class="at">color =</span> <span class="sc">~</span>state,</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">colors =</span> state_colors,</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">type =</span> <span class="st">'scatter'</span>, <span class="at">mode =</span> <span class="st">'lines+markers'</span>,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">line =</span> <span class="fu">list</span>(<span class="at">width =</span> <span class="dv">2</span>),</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">marker =</span> <span class="fu">list</span>(<span class="at">size =</span> <span class="dv">6</span>),</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>        <span class="at">hovertemplate =</span> <span class="fu">paste0</span>(</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>          <span class="st">'&lt;b&gt;%{fullData.name}&lt;/b&gt;&lt;br&gt;'</span>,</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>          <span class="st">'Year: %{x}&lt;br&gt;'</span>,</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>          <span class="st">'Normalized Turnout: %{y:.1%}&lt;br&gt;'</span>,</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>          <span class="st">'&lt;extra&gt;&lt;/extra&gt;'</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>        )) <span class="sc">%&gt;%</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">layout</span>(</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="fu">list</span>(</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">text =</span> <span class="st">"Normalized VEP Turnout Over Time by State&lt;br&gt;&lt;sub&gt;Deviation from State-Election Type Average&lt;/sub&gt;"</span>,</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">x =</span> <span class="dv">0</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">xaxis =</span> <span class="fu">list</span>(<span class="at">title =</span> <span class="st">"Year"</span>),</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">yaxis =</span> <span class="fu">list</span>(<span class="at">title =</span> <span class="st">"Normalized VEP Turnout (Deviation from Mean)"</span>, <span class="at">tickformat =</span> <span class="st">".0%"</span>),</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">hovermode =</span> <span class="st">"closest"</span>,</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend =</span> <span class="fu">list</span>(<span class="at">title =</span> <span class="fu">list</span>(<span class="at">text =</span> <span class="st">"State"</span>)),</span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">shapes =</span> <span class="fu">list</span>(</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>      <span class="fu">list</span>(</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>        <span class="at">type =</span> <span class="st">"line"</span>,</span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>        <span class="at">x0 =</span> <span class="fu">min</span>(voter_turnout<span class="sc">$</span>year, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>        <span class="at">x1 =</span> <span class="fu">max</span>(voter_turnout<span class="sc">$</span>year, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>        <span class="at">y0 =</span> <span class="dv">0</span>,</span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>        <span class="at">y1 =</span> <span class="dv">0</span>,</span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>        <span class="at">line =</span> <span class="fu">list</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">dash =</span> <span class="st">"dash"</span>, <span class="at">width =</span> <span class="dv">1</span>)</span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="plotly html-widget html-fill-item" id="htmlwidget-44ff4dd4245113b9ac6c" style="width:100%;height:464px;"></div>
+<script type="application/json" data-for="htmlwidget-44ff4dd4245113b9ac6c">{"x":{"visdat":{"109944c09925d":["function () ","plotlyVisDat"]},"cur_data":"109944c09925d","attrs":{"109944c09925d":{"x":{},"y":{},"mode":"lines+markers","line":{"width":2},"marker":{"size":6},"hovertemplate":"<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","color":{},"colors":["#FDB927","#FF8C00","#00274C","#003DA5","#BB0000","#8B4513"],"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"scatter"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"title":{"text":"Normalized VEP Turnout Over Time by State<br><sub>Deviation from State-Election Type Average<\/sub>","x":0},"xaxis":{"domain":[0,1],"automargin":true,"title":"Year"},"yaxis":{"domain":[0,1],"automargin":true,"title":"Normalized VEP Turnout (Deviation from Mean)","tickformat":".0%"},"hovermode":"closest","legend":{"title":{"text":"State"}},"shapes":[{"type":"line","x0":1980,"x1":2024,"y0":0,"y1":0,"line":{"color":"black","dash":"dash","width":1}}],"showlegend":true},"source":"A","config":{"modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"data":[{"x":[2024,2022,2020,2018,2016,2014,2012,2010,2008,2006,2004,2002,2000,1998,1996,1994,1992,1990,1988,1986,1984,1982,1980],"y":[0.027450000000000079,-0.0054636363636363901,0.095150000000000082,0.05403636363636366,-0.01005,-0.12746363636363639,-0.034649999999999959,0.026036363636363691,0.02395000000000002,-0.019363636363636302,0.0053499999999999598,-0.058263636363636351,-0.033549999999999969,0.01183636363636364,-0.042949999999999933,0.046136363636363642,0.022650000000000059,3.6363636363667677e-05,-0.018649999999999941,0.0087363636363636497,-0.0035499999999999399,0.063736363636363647,-0.0311499999999999],"mode":"lines+markers","line":{"color":"rgba(253,185,39,1)","width":2},"marker":{"color":"rgba(253,185,39,1)","size":6,"line":{"color":"rgba(253,185,39,1)"}},"hovertemplate":["<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>"],"type":"scatter","name":"California","textfont":{"color":"rgba(253,185,39,1)"},"error_y":{"color":"rgba(253,185,39,1)"},"error_x":{"color":"rgba(253,185,39,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2024,2022,2020,2018,2016,2014,2012,2010,2008,2006,2004,2002,2000,1998,1996,1994,1992,1990,1988,1986,1984,1982,1980],"y":[0.19583796542833337,0.16303575337363635,0.23663796542833343,0.21983575337363637,0.18593796542833335,0.10603575337363635,0.16193796542833333,0.097635753373636405,0.19523796542833319,0.072635753373636369,0.17153796542833338,0.12843575337363644,0.089237965428333343,0.060035753373636307,0.061237965428333319,0.11423575337363634,0.1008379654283334,-0.32060302789636363,-0.46636101721166667,-0.32037314691636365,-0.46602128526166664,-0.32090985217636364,-0.46605938638166666],"mode":"lines+markers","line":{"color":"rgba(255,140,0,1)","width":2},"marker":{"color":"rgba(255,140,0,1)","size":6,"line":{"color":"rgba(255,140,0,1)"}},"hovertemplate":["<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>"],"type":"scatter","name":"Florida","textfont":{"color":"rgba(255,140,0,1)"},"error_y":{"color":"rgba(255,140,0,1)"},"error_x":{"color":"rgba(255,140,0,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2024,2022,2020,2018,2016,2014,2012,2010,2008,2006,2004,2002,2000,1998,1996,1994,1992,1990,1988,1986,1984,1982,1980],"y":[0.099366666666666603,0.11736363636363641,0.085666666666666558,0.1022636363636364,0.0083666666666667392,-0.042236363636363627,0.0054666666666666197,-0.02313636363636367,0.049766666666666619,0.060263636363636353,0.029666666666666501,-0.02313636363636367,-0.042533333333333423,-0.025136363636363679,-0.084733333333333327,-0.01053636363636367,-0.0070333333333333298,-0.079336363636363649,-0.080433333333333357,-0.095436363636363722,-0.04053333333333331,0.019063636363636331,-0.02303333333333335],"mode":"lines+markers","line":{"color":"rgba(0,39,76,1)","width":2},"marker":{"color":"rgba(0,39,76,1)","size":6,"line":{"color":"rgba(0,39,76,1)"}},"hovertemplate":["<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>"],"type":"scatter","name":"Michigan","textfont":{"color":"rgba(0,39,76,1)"},"error_y":{"color":"rgba(0,39,76,1)"},"error_x":{"color":"rgba(0,39,76,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2024,2022,2020,2018,2016,2014,2012,2010,2008,2006,2004,2002,2000,1998,1996,1994,1992,1990,1988,1986,1984,1982,1980],"y":[0.035374999999999927,0.036345454545454507,0.048074999999999979,0.063145454545454616,0.0066749999999999804,-0.098154545454545439,-0.033924999999999983,-0.025954545454545501,0.02747500000000002,-0.019954545454545499,0.020175000000000051,-0.015854545454545451,-0.0074250000000000097,0.017645454545454568,-0.039924999999999988,0.047445454545454617,0.0091750000000000408,-0.03985454545454542,-0.029325000000000039,-0.024154545454545429,0.0032750000000000201,0.059345454545454528,-0.039625000000000021],"mode":"lines+markers","line":{"color":"rgba(0,61,165,1)","width":2},"marker":{"color":"rgba(0,61,165,1)","size":6,"line":{"color":"rgba(0,61,165,1)"}},"hovertemplate":["<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>"],"type":"scatter","name":"New York","textfont":{"color":"rgba(0,61,165,1)"},"error_y":{"color":"rgba(0,61,165,1)"},"error_x":{"color":"rgba(0,61,165,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2024,2022,2020,2018,2016,2014,2012,2010,2008,2006,2004,2002,2000,1998,1996,1994,1992,1990,1988,1986,1984,1982,1980],"y":[0.029350000000000091,0.022018181818181819,0.046250000000000013,0.060318181818181771,0.015650000000000049,-0.08808181818181815,0.026750000000000052,0.01181818181818178,0.053649999999999969,0.045318181818181813,0.056150000000000033,-0.047981818181818181,-0.045949999999999928,-0.021081818181818202,-0.058149999999999917,-0.014581818181818191,0.00085000000000001741,0.0040181818181817498,-0.052249999999999908,0.016318181818181839,-0.02134999999999998,0.011918181818181821,-0.05094999999999994],"mode":"lines+markers","line":{"color":"rgba(187,0,0,1)","width":2},"marker":{"color":"rgba(187,0,0,1)","size":6,"line":{"color":"rgba(187,0,0,1)"}},"hovertemplate":["<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>"],"type":"scatter","name":"Ohio","textfont":{"color":"rgba(187,0,0,1)"},"error_y":{"color":"rgba(187,0,0,1)"},"error_x":{"color":"rgba(187,0,0,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[2024,2022,2020,2018,2016,2014,2012,2010,2008,2006,2004,2002,2000,1998,1996,1994,1992,1990,1988,1986,1984,1982,1980],"y":[0.031358333333333259,0.054481818181818069,0.06205833333333332,0.096081818181818157,-0.029841666666666648,-0.11481818181818187,-0.048441666666666709,-0.051018181818181851,-0.039241666666666619,-0.059718181818181837,-0.00044166666666667354,-0.038118181818181829,-0.063641666666666707,-0.052418181818181808,-0.089441666666666642,0.0074818181818181399,0.064858333333333351,0.0028818181818181998,0.024058333333333289,0.015981818181818149,0.032658333333333338,0.13918181818181818,0.05605833333333321],"mode":"lines+markers","line":{"color":"rgba(139,69,19,1)","width":2},"marker":{"color":"rgba(139,69,19,1)","size":6,"line":{"color":"rgba(139,69,19,1)"}},"hovertemplate":["<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>","<b>%{fullData.name}<\/b><br>Year: %{x}<br>Normalized Turnout: %{y:.1%}<br><extra><\/extra>"],"type":"scatter","name":"Utah","textfont":{"color":"rgba(139,69,19,1)"},"error_y":{"color":"rgba(139,69,19,1)"},"error_x":{"color":"rgba(139,69,19,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+<p><strong>Key Observations:</strong></p>
+<ul>
+<li><strong>2020 and 2024 stand out</strong>: Most states show positive normalized turnout (above their historical average) for the 2020 and 2024 presidential elections, indicating exceptional voter engagement in recent years.</li>
+<li><strong>Oscillating around zero</strong>: The normalized values oscillate around the zero line (the reference line), which is expected since each state’s data is centered around its own mean.</li>
+<li><strong>Identifying unusual elections</strong>: Elections that deviate significantly from the zero line represent unusual mobilization (high positive) or suppression/disengagement (low negative) relative to that state’s typical pattern.</li>
+<li><strong>State-specific patterns</strong>: Some states show more volatility in normalized turnout (larger deviations from zero) than others, suggesting different levels of election-to-election stability.</li>
+<li><strong>Recent upward trend</strong>: Many states show an upward trajectory in normalized turnout in recent years, particularly for presidential elections, suggesting increasing civic engagement.</li>
+<li><strong>Midterm stability</strong>: Normalized midterm turnout appears more stable (smaller deviations) than presidential elections, indicating more consistent midterm voter behavior.</li>
+</ul>
+</section>
+<section id="distribution-of-normalized-turnout" class="level2">
+<h2 class="anchored" data-anchor-id="distribution-of-normalized-turnout">Distribution of Normalized Turnout</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Boxplot of normalized turnout by state and election type</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(voter_turnout, <span class="fu">aes</span>(<span class="at">x =</span> state, <span class="at">y =</span> normalized_vep_turnout, <span class="at">fill =</span> election_type)) <span class="sc">+</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">linewidth =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Distribution of Normalized VEP Turnout by State and Election Type"</span>,</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"How much each election deviates from that state's average"</span>,</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"State"</span>,</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Normalized VEP Turnout (Deviation from Mean)"</span>,</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> <span class="st">"Election Type"</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">percent_format</span>()) <span class="sc">+</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"bottom"</span>,</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>)</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="voter-turnout-eda_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Key Observations:</strong></p>
+<ul>
+<li><strong>Centered at zero</strong>: By design, each state-election type combination should have a mean of approximately zero (shown by the dashed reference line), confirming the normalization was successful.</li>
+<li><strong>California shows high variability</strong>: California has the widest distribution of normalized turnout values for both election types, indicating the most volatile turnout patterns—some elections significantly exceed the average while others fall far below.</li>
+<li><strong>Michigan’s consistency</strong>: Michigan shows relatively tight distributions, suggesting more stable and predictable turnout patterns over time.</li>
+<li><strong>Presidential elections more variable</strong>: For most states, presidential elections show wider distributions than midterm elections, indicating presidential years experience more dramatic swings in turnout relative to their averages.</li>
+<li><strong>Symmetric distributions</strong>: Most distributions appear roughly symmetric around zero, suggesting turnout increases and decreases are balanced over time.</li>
+<li><strong>Outliers present</strong>: A few states show outliers, representing elections with exceptionally unusual turnout—these.</li>
+<li><strong>Florida’s extreme outliers</strong>: Florida shows extreme negative outliers, again reflecting the 1980-1990 data quality issues.</li>
+</ul>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

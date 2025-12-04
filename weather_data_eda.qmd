@@ -1,0 +1,185 @@
+---
+title: "Election Day Weather Exploratory Data Analysis"
+author: Group 6
+date: today
+format:
+  html:
+    code-fold: true
+    toc: true
+    toc-depth: 3
+    theme: cosmo
+execute:
+  warning: false
+  message: false
+---
+
+# Setup
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(ggplot2)
+library(plotly)
+```
+
+```{r}
+state_colors <- c(
+  "California" = "#FDB927",    
+  "Florida"    = "#FF8C00",    
+  "Michigan"   = "#00274C",    
+  "New York"   = "#003DA5",    
+  "Ohio"       = "#BB0000",    
+  "Utah"       = "#8B4513"     
+)
+```
+
+# Load Data
+
+```{r}
+analysis_df <- read_csv("data/processed-data/election_day_weather_full.csv") %>%
+  clean_names() %>%
+  arrange(state, year)  # Sort by state and year for proper plotting
+
+# Preview data
+
+head(analysis_df)
+glimpse(analysis_df)
+
+
+```
+
+
+```{r}
+summary(analysis_df)
+```
+
+# Visualizations
+## Temperature Distribution on Election Days (Interactive)
+
+```{r}
+ggplot(analysis_df, aes(x = tavg)) +
+  geom_histogram(
+    binwidth = 5,
+    fill = "steelblue",
+    alpha = 0.7,
+    boundary = 0,
+    color = "black",     # adds border around bars
+    size = 0.3           # thickness of border
+  ) +
+  geom_vline(
+    aes(xintercept = mean(tavg, na.rm = TRUE)),
+    linetype = "dashed",
+    color = "black"
+  ) +
+  labs(
+    title = "Distribution of Average Temperature on Election Days",
+    x = "Average Temperature (°F)",
+    y = "Count"
+  ) +
+  theme_minimal()
+```
+
+**Interpretation:** The distribution of Election Day temperatures across all states and years shows that most elections occur in moderate fall weather, with temperatures centered around 55-60°F (indicated by the dashed line showing the mean). The distribution is relatively normal, suggesting that early November consistently provides mild to cool conditions across the United States. The spread shows variability from cold days in the 30s to warmer days in the 70s-80s, reflecting both geographic diversity and year-to-year weather variation.
+
+```{r}
+p_temp_box <- ggplot(analysis_df, aes(x = state, y = tavg, fill = state)) +
+geom_boxplot(alpha = 0.9) +
+scale_fill_manual(values = state_colors) +
+labs(
+title = "Election Day Temperature by State",
+x = "State",
+y = "Average Temperature (°F)"
+) +
+theme_minimal() +
+theme(
+legend.position = "none",
+axis.text.x = element_text(angle = 0, hjust = 0.5)
+)
+
+ggplotly(p_temp_box)
+
+```
+
+**Interpretation:** This boxplot reveals clear geographic temperature patterns on Election Day. Florida consistently experiences the warmest conditions (median ~72°F), while northern states like Michigan and New York have cooler Election Days (medians in the mid-40s to low-50s). California shows moderate temperatures with relatively low variability. The presence of outliers and wide interquartile ranges in several states (notably Ohio and Florida) indicates significant year-to-year temperature variability, suggesting that early November weather can vary substantially depending on yearly climate patterns.
+
+```{r}
+temp_on_elec_day <- ggplot(analysis_df, aes(x = year, y = tavg, color = state)) +
+geom_line(linewidth = 0.8) +
+geom_point(size = 1.5) +
+scale_color_manual(values = state_colors) +
+labs(
+title = "Average Election Day Temperature Over Time by State",
+subtitle = "Election Day average temperature (°F), by year and state",
+x = "Election Year",
+y = "Average Temperature (°F)",
+color = "State"
+) +
+theme_minimal() +
+theme(legend.position = "bottom")
+
+ggplotly(temp_on_elec_day)
+
+```
+
+**Interpretation:** The time series reveals that Election Day temperatures have been highly variable across years with no clear long-term warming or cooling trend for most states. Florida shows the most dramatic recent spike, reaching nearly 80°F in 2024 (the warmest recorded). Ohio displays the most erratic pattern with swings from near 40°F to 70°F, reflecting its susceptibility to early-season cold fronts versus warm spells. California shows a slight cooling trend over the decades. Notably, 2020 was unusually cold across multiple states, while 2024 was exceptionally warm. These patterns suggest that Election Day weather remains unpredictable and can vary by 20-30°F between election cycles.
+
+```{r}
+## Temperature and Turnout Trends Over Time
+
+# Load voter turnout data and merge with weather data
+voter_turnout <- read_csv("data/processed-data/voter_turnout_selected_states.csv") %>%
+  janitor::clean_names()
+
+# Merge weather + turnout by state and year
+weather_turnout <- analysis_df %>%
+  inner_join(
+    voter_turnout,
+    by = c("state", "year")
+  )
+
+# Create faceted plot by state to show both metrics
+p_faceted <- ggplot(weather_turnout, aes(x = year)) +
+  geom_line(aes(y = tavg / 100, color = "Temperature"), linewidth = 0.8) +
+  geom_point(aes(y = tavg / 100, color = "Temperature"), size = 1.5) +
+  geom_line(aes(y = vep_turnout_rate, color = "Turnout"), linewidth = 0.8) +
+  geom_point(aes(y = vep_turnout_rate, color = "Turnout"), size = 1.5) +
+  facet_wrap(~state, ncol = 2) +
+  scale_color_manual(
+    values = c("Temperature" = "#E74C3C", "Turnout" = "#3498DB"),
+    name = "Metric"
+  ) +
+  scale_y_continuous(
+    name = "Turnout Rate",
+    labels = scales::percent_format(),
+    sec.axis = sec_axis(~.*100, name = "Temperature (°F)")
+  ) +
+  labs(
+    title = "Temperature and Voter Turnout Trends Over Time by State",
+    subtitle = "Red = Temperature (°F) on right axis | Blue = Turnout Rate on left axis",
+    x = "Election Year"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    strip.text = element_text(face = "bold", size = 11),
+    axis.title.y.left = element_text(color = "#3498DB"),
+    axis.title.y.right = element_text(color = "#E74C3C"),
+    axis.text.y.right = element_text(color = "#E74C3C")
+  )
+
+# Display the plot (keeping as static to preserve dual axes)
+p_faceted
+
+
+```
+
+**Interpretation:** Comparing temperature and turnout trends reveals complex state-specific patterns. Most notably, there is no consistent relationship between Election Day temperature and voter turnout across states. For instance:
+
+- **Michigan** shows relatively stable high turnout (60-75%) despite significant temperature fluctuations.
+- **Florida** exhibits high variability in both metrics - turnout ranges from 38% to 71%, while temperatures swing from 54°F to 79°F, yet no clear correlation is evident.
+- **California** has experienced declining temperatures over time, but turnout remains variable without a clear temperature-driven pattern.
+- **Presidential election years** (visible as turnout spikes) consistently show higher participation regardless of temperature conditions.
+
+This suggests that Election Day weather may be less influential on turnout than political factors like election type, candidate quality, and mobilization efforts. The dual-axis visualization reveals that temperature variation (20-30°F swings) occurs alongside both high and low turnout years, indicating weather is not a primary determinant of voter participation in these states.
+
+```

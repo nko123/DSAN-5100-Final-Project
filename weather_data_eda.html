@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Group 6">
+<meta name="dcterms.date" content="2025-12-04">
+
+<title>Election Day Weather Exploratory Data Analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="weather_data_eda_files/libs/clipboard/clipboard.min.js"></script>
+<script src="weather_data_eda_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="weather_data_eda_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="weather_data_eda_files/libs/quarto-html/popper.min.js"></script>
+<script src="weather_data_eda_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="weather_data_eda_files/libs/quarto-html/anchor.min.js"></script>
+<link href="weather_data_eda_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="weather_data_eda_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="weather_data_eda_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="weather_data_eda_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="weather_data_eda_files/libs/bootstrap/bootstrap-8a894fcc3cb5e37eb5bf30def131be2f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="weather_data_eda_files/libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet">
+<script src="weather_data_eda_files/libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<script src="weather_data_eda_files/libs/plotly-binding-4.11.0/plotly.js"></script>
+<script src="weather_data_eda_files/libs/typedarray-0.1/typedarray.min.js"></script>
+<script src="weather_data_eda_files/libs/jquery-3.5.1/jquery.min.js"></script>
+<link href="weather_data_eda_files/libs/crosstalk-1.2.2/css/crosstalk.min.css" rel="stylesheet">
+<script src="weather_data_eda_files/libs/crosstalk-1.2.2/js/crosstalk.min.js"></script>
+<link href="weather_data_eda_files/libs/plotly-htmlwidgets-css-2.11.1/plotly-htmlwidgets.css" rel="stylesheet">
+<script src="weather_data_eda_files/libs/plotly-main-2.11.1/plotly-latest.min.js"></script>
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup">Setup</a></li>
+  <li><a href="#load-data" id="toc-load-data" class="nav-link" data-scroll-target="#load-data">Load Data</a></li>
+  <li><a href="#visualizations" id="toc-visualizations" class="nav-link" data-scroll-target="#visualizations">Visualizations</a>
+  <ul class="collapse">
+  <li><a href="#temperature-distribution-on-election-days-interactive" id="toc-temperature-distribution-on-election-days-interactive" class="nav-link" data-scroll-target="#temperature-distribution-on-election-days-interactive">Temperature Distribution on Election Days (Interactive)</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Election Day Weather Exploratory Data Analysis</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Group 6 </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">December 4, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="setup" class="level1">
+<h1>Setup</h1>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(janitor)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(plotly)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>state_colors <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"California"</span> <span class="ot">=</span> <span class="st">"#FDB927"</span>,    </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Florida"</span>    <span class="ot">=</span> <span class="st">"#FF8C00"</span>,    </span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Michigan"</span>   <span class="ot">=</span> <span class="st">"#00274C"</span>,    </span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"New York"</span>   <span class="ot">=</span> <span class="st">"#003DA5"</span>,    </span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Ohio"</span>       <span class="ot">=</span> <span class="st">"#BB0000"</span>,    </span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Utah"</span>       <span class="ot">=</span> <span class="st">"#8B4513"</span>     </span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="load-data" class="level1">
+<h1>Load Data</h1>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>analysis_df <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/processed-data/election_day_weather_full.csv"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">clean_names</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(state, year)  <span class="co"># Sort by state and year for proper plotting</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Preview data</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(analysis_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 16
+  state      state_abb  year election_type election_date station_id station_name
+  &lt;chr&gt;      &lt;chr&gt;     &lt;dbl&gt; &lt;chr&gt;         &lt;date&gt;        &lt;chr&gt;      &lt;chr&gt;       
+1 California CA         1980 Presidential  1980-11-04    USW000232… SACRAMENTO …
+2 California CA         1982 Midterm       1982-11-02    USW000232… SACRAMENTO …
+3 California CA         1984 Presidential  1984-11-06    USW000232… SACRAMENTO …
+4 California CA         1986 Midterm       1986-11-04    USW000232… SACRAMENTO …
+5 California CA         1988 Presidential  1988-11-08    USW000232… SACRAMENTO …
+6 California CA         1990 Midterm       1990-11-06    USW000232… SACRAMENTO …
+# ℹ 9 more variables: latitude &lt;dbl&gt;, longitude &lt;dbl&gt;, tmax &lt;dbl&gt;, tmin &lt;dbl&gt;,
+#   prcp &lt;dbl&gt;, snow &lt;dbl&gt;, tavg &lt;dbl&gt;, rain_any &lt;dbl&gt;, snow_any &lt;dbl&gt;</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(analysis_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 138
+Columns: 16
+$ state         &lt;chr&gt; "California", "California", "California", "California", …
+$ state_abb     &lt;chr&gt; "CA", "CA", "CA", "CA", "CA", "CA", "CA", "CA", "CA", "C…
+$ year          &lt;dbl&gt; 1980, 1982, 1984, 1986, 1988, 1990, 1992, 1994, 1996, 19…
+$ election_type &lt;chr&gt; "Presidential", "Midterm", "Presidential", "Midterm", "P…
+$ election_date &lt;date&gt; 1980-11-04, 1982-11-02, 1984-11-06, 1986-11-04, 1988-11…
+$ station_id    &lt;chr&gt; "USW00023271", "USW00023271", "USW00023271", "USW0002327…
+$ station_name  &lt;chr&gt; "SACRAMENTO 5 ESE, CA US", "SACRAMENTO 5 ESE, CA US", "S…
+$ latitude      &lt;dbl&gt; 38.55520, 38.55520, 38.55520, 38.55520, 38.55520, 38.555…
+$ longitude     &lt;dbl&gt; -121.41830, -121.41830, -121.41830, -121.41830, -121.418…
+$ tmax          &lt;dbl&gt; 84, 72, 65, 80, 64, 68, 73, 64, 64, 69, 71, 74, 72, 78, …
+$ tmin          &lt;dbl&gt; 55, 47, 51, 50, 49, 50, 55, 43, 43, 51, 46, 41, 45, 55, …
+$ prcp          &lt;dbl&gt; 0.00, 0.00, 0.33, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.…
+$ snow          &lt;dbl&gt; NA, NA, NA, NA, NA, NA, 0, 0, NA, 0, 0, 0, 0, NA, 0, 0, …
+$ tavg          &lt;dbl&gt; 69.5, 59.5, 58.0, 65.0, 56.5, 59.0, 64.0, 53.5, 53.5, 60…
+$ rain_any      &lt;dbl&gt; 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ snow_any      &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…</code></pre>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(analysis_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>    state            state_abb              year      election_type     
+ Length:138         Length:138         Min.   :1980   Length:138        
+ Class :character   Class :character   1st Qu.:1990   Class :character  
+ Mode  :character   Mode  :character   Median :2002   Mode  :character  
+                                       Mean   :2002                     
+                                       3rd Qu.:2014                     
+                                       Max.   :2024                     
+                                                                        
+ election_date         station_id        station_name          latitude    
+ Min.   :1980-11-04   Length:138         Length:138         Min.   :30.39  
+ 1st Qu.:1990-11-06   Class :character   Class :character   1st Qu.:38.56  
+ Median :2002-11-05   Mode  :character   Mode  :character   Median :40.38  
+ Mean   :2002-11-05                                         Mean   :39.21  
+ 3rd Qu.:2014-11-04                                         3rd Qu.:42.75  
+ Max.   :2024-11-05                                         Max.   :42.78  
+                                                                           
+   longitude            tmax            tmin            prcp        
+ Min.   :-121.42   Min.   :38.00   Min.   :21.00   Min.   :0.00000  
+ 1st Qu.:-111.97   1st Qu.:50.25   1st Qu.:34.00   1st Qu.:0.00000  
+ Median : -84.48   Median :61.00   Median :41.00   Median :0.00000  
+ Mean   : -93.17   Mean   :61.68   Mean   :42.36   Mean   :0.09928  
+ 3rd Qu.: -82.88   3rd Qu.:72.00   3rd Qu.:49.00   3rd Qu.:0.07750  
+ Max.   : -73.80   Max.   :89.00   Max.   :70.00   Max.   :1.65000  
+                                                                    
+      snow               tavg          rain_any         snow_any      
+ Min.   :0.000000   Min.   :30.00   Min.   :0.0000   Min.   :0.00000  
+ 1st Qu.:0.000000   1st Qu.:43.12   1st Qu.:0.0000   1st Qu.:0.00000  
+ Median :0.000000   Median :51.25   Median :0.0000   Median :0.00000  
+ Mean   :0.007207   Mean   :52.02   Mean   :0.3478   Mean   :0.01449  
+ 3rd Qu.:0.000000   3rd Qu.:59.50   3rd Qu.:1.0000   3rd Qu.:0.00000  
+ Max.   :0.700000   Max.   :79.00   Max.   :1.0000   Max.   :1.00000  
+ NA's   :27                                                           </code></pre>
+</div>
+</div>
+</section>
+<section id="visualizations" class="level1">
+<h1>Visualizations</h1>
+<section id="temperature-distribution-on-election-days-interactive" class="level2">
+<h2 class="anchored" data-anchor-id="temperature-distribution-on-election-days-interactive">Temperature Distribution on Election Days (Interactive)</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(analysis_df, <span class="fu">aes</span>(<span class="at">x =</span> tavg)) <span class="sc">+</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">binwidth =</span> <span class="dv">5</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> <span class="st">"steelblue"</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.7</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">boundary =</span> <span class="dv">0</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"black"</span>,     <span class="co"># adds border around bars</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">size =</span> <span class="fl">0.3</span>           <span class="co"># thickness of border</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">xintercept =</span> <span class="fu">mean</span>(tavg, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)),</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">linetype =</span> <span class="st">"dashed"</span>,</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"black"</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Distribution of Average Temperature on Election Days"</span>,</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Average Temperature (°F)"</span>,</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Count"</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="weather_data_eda_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Interpretation:</strong> The distribution of Election Day temperatures across all states and years shows that most elections occur in moderate fall weather, with temperatures centered around 55-60°F (indicated by the dashed line showing the mean). The distribution is relatively normal, suggesting that early November consistently provides mild to cool conditions across the United States. The spread shows variability from cold days in the 30s to warmer days in the 70s-80s, reflecting both geographic diversity and year-to-year weather variation.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>p_temp_box <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(analysis_df, <span class="fu">aes</span>(<span class="at">x =</span> state, <span class="at">y =</span> tavg, <span class="at">fill =</span> state)) <span class="sc">+</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">scale_fill_manual</span>(<span class="at">values =</span> state_colors) <span class="sc">+</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">labs</span>(</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="at">title =</span> <span class="st">"Election Day Temperature by State"</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="at">x =</span> <span class="st">"State"</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="at">y =</span> <span class="st">"Average Temperature (°F)"</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="fu">theme</span>(</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="at">legend.position =</span> <span class="st">"none"</span>,</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">0</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>)</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplotly</span>(p_temp_box)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="plotly html-widget html-fill-item" id="htmlwidget-747b15979bf47ea8d380" style="width:100%;height:464px;"></div>
+<script type="application/json" data-for="htmlwidget-747b15979bf47ea8d380">{"x":{"data":[{"x":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],"y":[69.5,59.5,58,65,56.5,59,64,53.5,53.5,60,58.5,57.5,58.5,66.5,54.5,62.5,66.5,57,64.5,59.5,64.5,49.5,58.5],"hoverinfo":"y","type":"box","fillcolor":"rgba(253,185,39,0.9)","marker":{"opacity":null,"outliercolor":"rgba(0,0,0,1)","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"},"size":5.6692913385826778},"line":{"color":"rgba(51,51,51,1)","width":1.8897637795275593},"name":"California","legendgroup":"California","showlegend":true,"xaxis":"x","yaxis":"y","frame":null},{"x":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],"y":[72,70.5,55.5,67,60.5,59.5,73.5,73,70,74,72.5,72.5,74,66,62.5,64,57.5,57,68.5,76,54,74.5,79],"hoverinfo":"y","type":"box","fillcolor":"rgba(255,140,0,0.9)","marker":{"opacity":null,"outliercolor":"rgba(0,0,0,1)","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"},"size":5.6692913385826778},"line":{"color":"rgba(51,51,51,1)","width":1.8897637795275593},"name":"Florida","legendgroup":"Florida","showlegend":true,"xaxis":"x","yaxis":"y","frame":null},{"x":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],"y":[44,58,35,35.5,39.5,36,44.5,51.5,42.5,32,51,31,41.5,48.5,60,37.5,33,49.5,51.5,48,48.5,43,64],"hoverinfo":"y","type":"box","fillcolor":"rgba(0,39,76,0.9)","marker":{"opacity":null,"outliercolor":"rgba(0,0,0,1)","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"},"size":5.6692913385826778},"line":{"color":"rgba(51,51,51,1)","width":1.8897637795275593},"name":"Michigan","legendgroup":"Michigan","showlegend":true,"xaxis":"x","yaxis":"y","frame":null},{"x":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4],"y":[48,65.5,44,40,43.5,45.5,44,51.5,46.5,37.5,44,37.5,44,46.5,47.5,39,30.5,54,42.5,49,33,43.5,62],"hoverinfo":"y","type":"box","fillcolor":"rgba(0,61,165,0.9)","marker":{"opacity":null,"outliercolor":"rgba(0,0,0,1)","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"},"size":5.6692913385826778},"line":{"color":"rgba(51,51,51,1)","width":1.8897637795275593},"name":"New York","legendgroup":"New York","showlegend":true,"xaxis":"x","yaxis":"y","frame":null},{"x":[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],"y":[52.5,68.5,38,47,44,40.5,56,55,51,44,57,43,58,51,58,41.5,39.5,57,50.5,52.5,47,50.5,70.5],"hoverinfo":"y","type":"box","fillcolor":"rgba(187,0,0,0.9)","marker":{"opacity":null,"outliercolor":"rgba(0,0,0,1)","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"},"size":5.6692913385826778},"line":{"color":"rgba(51,51,51,1)","width":1.8897637795275593},"name":"Ohio","legendgroup":"Ohio","showlegend":true,"xaxis":"x","yaxis":"y","frame":null},{"x":[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6],"y":[52.5,39,50.5,44,47.5,35.5,37,38,36.5,40.5,30,38.5,37,57.5,44.5,50,54,41,53.5,42.5,55.5,48.5,38],"hoverinfo":"y","type":"box","fillcolor":"rgba(139,69,19,0.9)","marker":{"opacity":null,"outliercolor":"rgba(0,0,0,1)","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"},"size":5.6692913385826778},"line":{"color":"rgba(51,51,51,1)","width":1.8897637795275593},"name":"Utah","legendgroup":"Utah","showlegend":true,"xaxis":"x","yaxis":"y","frame":null}],"layout":{"margin":{"t":43.762557077625573,"r":7.3059360730593621,"b":40.182648401826498,"l":37.260273972602747},"font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"title":{"text":"Election Day Temperature by State","font":{"color":"rgba(0,0,0,1)","family":"","size":17.534246575342465},"x":0,"xref":"paper"},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.40000000000000002,6.5999999999999996],"tickmode":"array","ticktext":["California","Florida","Michigan","New York","Ohio","Utah"],"tickvals":[1,2,3,3.9999999999999996,5,6],"categoryorder":"array","categoryarray":["California","Florida","Michigan","New York","Ohio","Utah"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"y","title":{"text":"State","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[27.550000000000001,81.450000000000003],"tickmode":"array","ticktext":["30","40","50","60","70","80"],"tickvals":[30,40,50,60,70,80],"categoryorder":"array","categoryarray":["30","40","50","60","70","80"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"x","title":{"text":"Average Temperature (°F)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","layer":"below","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"1233c5979e6a5":{"x":{},"y":{},"fill":{},"type":"box"}},"cur_data":"1233c5979e6a5","visdat":{"1233c5979e6a5":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+<p><strong>Interpretation:</strong> This boxplot reveals clear geographic temperature patterns on Election Day. Florida consistently experiences the warmest conditions (median ~72°F), while northern states like Michigan and New York have cooler Election Days (medians in the mid-40s to low-50s). California shows moderate temperatures with relatively low variability. The presence of outliers and wide interquartile ranges in several states (notably Ohio and Florida) indicates significant year-to-year temperature variability, suggesting that early November weather can vary substantially depending on yearly climate patterns.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>temp_on_elec_day <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(analysis_df, <span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> tavg, <span class="at">color =</span> state)) <span class="sc">+</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">1.5</span>) <span class="sc">+</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">scale_color_manual</span>(<span class="at">values =</span> state_colors) <span class="sc">+</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">labs</span>(</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="at">title =</span> <span class="st">"Average Election Day Temperature Over Time by State"</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="at">subtitle =</span> <span class="st">"Election Day average temperature (°F), by year and state"</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="at">x =</span> <span class="st">"Election Year"</span>,</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="at">y =</span> <span class="st">"Average Temperature (°F)"</span>,</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="at">color =</span> <span class="st">"State"</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplotly</span>(temp_on_elec_day)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="plotly html-widget html-fill-item" id="htmlwidget-44a7f5b224921ea5d138" style="width:100%;height:464px;"></div>
+<script type="application/json" data-for="htmlwidget-44a7f5b224921ea5d138">{"x":{"data":[{"x":[1980,1982,1984,1986,1988,1990,1992,1994,1996,1998,2000,2002,2004,2006,2008,2010,2012,2014,2016,2018,2020,2022,2024],"y":[69.5,59.5,58,65,56.5,59,64,53.5,53.5,60,58.5,57.5,58.5,66.5,54.5,62.5,66.5,57,64.5,59.5,64.5,49.5,58.5],"text":["year: 1980<br />tavg: 69.5<br />state: California","year: 1982<br />tavg: 59.5<br />state: California","year: 1984<br />tavg: 58.0<br />state: California","year: 1986<br />tavg: 65.0<br />state: California","year: 1988<br />tavg: 56.5<br />state: California","year: 1990<br />tavg: 59.0<br />state: California","year: 1992<br />tavg: 64.0<br />state: California","year: 1994<br />tavg: 53.5<br />state: California","year: 1996<br />tavg: 53.5<br />state: California","year: 1998<br />tavg: 60.0<br />state: California","year: 2000<br />tavg: 58.5<br />state: California","year: 2002<br />tavg: 57.5<br />state: California","year: 2004<br />tavg: 58.5<br />state: California","year: 2006<br />tavg: 66.5<br />state: California","year: 2008<br />tavg: 54.5<br />state: California","year: 2010<br />tavg: 62.5<br />state: California","year: 2012<br />tavg: 66.5<br />state: California","year: 2014<br />tavg: 57.0<br />state: California","year: 2016<br />tavg: 64.5<br />state: California","year: 2018<br />tavg: 59.5<br />state: California","year: 2020<br />tavg: 64.5<br />state: California","year: 2022<br />tavg: 49.5<br />state: California","year: 2024<br />tavg: 58.5<br />state: California"],"type":"scatter","mode":"lines+markers","line":{"width":3.0236220472440949,"color":"rgba(253,185,39,1)","dash":"solid"},"hoveron":"points","name":"California","legendgroup":"California","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","marker":{"autocolorscale":false,"color":"rgba(253,185,39,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(253,185,39,1)"}},"frame":null},{"x":[1980,1982,1984,1986,1988,1990,1992,1994,1996,1998,2000,2002,2004,2006,2008,2010,2012,2014,2016,2018,2020,2022,2024],"y":[72,70.5,55.5,67,60.5,59.5,73.5,73,70,74,72.5,72.5,74,66,62.5,64,57.5,57,68.5,76,54,74.5,79],"text":["year: 1980<br />tavg: 72.0<br />state: Florida","year: 1982<br />tavg: 70.5<br />state: Florida","year: 1984<br />tavg: 55.5<br />state: Florida","year: 1986<br />tavg: 67.0<br />state: Florida","year: 1988<br />tavg: 60.5<br />state: Florida","year: 1990<br />tavg: 59.5<br />state: Florida","year: 1992<br />tavg: 73.5<br />state: Florida","year: 1994<br />tavg: 73.0<br />state: Florida","year: 1996<br />tavg: 70.0<br />state: Florida","year: 1998<br />tavg: 74.0<br />state: Florida","year: 2000<br />tavg: 72.5<br />state: Florida","year: 2002<br />tavg: 72.5<br />state: Florida","year: 2004<br />tavg: 74.0<br />state: Florida","year: 2006<br />tavg: 66.0<br />state: Florida","year: 2008<br />tavg: 62.5<br />state: Florida","year: 2010<br />tavg: 64.0<br />state: Florida","year: 2012<br />tavg: 57.5<br />state: Florida","year: 2014<br />tavg: 57.0<br />state: Florida","year: 2016<br />tavg: 68.5<br />state: Florida","year: 2018<br />tavg: 76.0<br />state: Florida","year: 2020<br />tavg: 54.0<br />state: Florida","year: 2022<br />tavg: 74.5<br />state: Florida","year: 2024<br />tavg: 79.0<br />state: Florida"],"type":"scatter","mode":"lines+markers","line":{"width":3.0236220472440949,"color":"rgba(255,140,0,1)","dash":"solid"},"hoveron":"points","name":"Florida","legendgroup":"Florida","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","marker":{"autocolorscale":false,"color":"rgba(255,140,0,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(255,140,0,1)"}},"frame":null},{"x":[1980,1982,1984,1986,1988,1990,1992,1994,1996,1998,2000,2002,2004,2006,2008,2010,2012,2014,2016,2018,2020,2022,2024],"y":[44,58,35,35.5,39.5,36,44.5,51.5,42.5,32,51,31,41.5,48.5,60,37.5,33,49.5,51.5,48,48.5,43,64],"text":["year: 1980<br />tavg: 44.0<br />state: Michigan","year: 1982<br />tavg: 58.0<br />state: Michigan","year: 1984<br />tavg: 35.0<br />state: Michigan","year: 1986<br />tavg: 35.5<br />state: Michigan","year: 1988<br />tavg: 39.5<br />state: Michigan","year: 1990<br />tavg: 36.0<br />state: Michigan","year: 1992<br />tavg: 44.5<br />state: Michigan","year: 1994<br />tavg: 51.5<br />state: Michigan","year: 1996<br />tavg: 42.5<br />state: Michigan","year: 1998<br />tavg: 32.0<br />state: Michigan","year: 2000<br />tavg: 51.0<br />state: Michigan","year: 2002<br />tavg: 31.0<br />state: Michigan","year: 2004<br />tavg: 41.5<br />state: Michigan","year: 2006<br />tavg: 48.5<br />state: Michigan","year: 2008<br />tavg: 60.0<br />state: Michigan","year: 2010<br />tavg: 37.5<br />state: Michigan","year: 2012<br />tavg: 33.0<br />state: Michigan","year: 2014<br />tavg: 49.5<br />state: Michigan","year: 2016<br />tavg: 51.5<br />state: Michigan","year: 2018<br />tavg: 48.0<br />state: Michigan","year: 2020<br />tavg: 48.5<br />state: Michigan","year: 2022<br />tavg: 43.0<br />state: Michigan","year: 2024<br />tavg: 64.0<br />state: Michigan"],"type":"scatter","mode":"lines+markers","line":{"width":3.0236220472440949,"color":"rgba(0,39,76,1)","dash":"solid"},"hoveron":"points","name":"Michigan","legendgroup":"Michigan","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","marker":{"autocolorscale":false,"color":"rgba(0,39,76,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,39,76,1)"}},"frame":null},{"x":[1980,1982,1984,1986,1988,1990,1992,1994,1996,1998,2000,2002,2004,2006,2008,2010,2012,2014,2016,2018,2020,2022,2024],"y":[48,65.5,44,40,43.5,45.5,44,51.5,46.5,37.5,44,37.5,44,46.5,47.5,39,30.5,54,42.5,49,33,43.5,62],"text":["year: 1980<br />tavg: 48.0<br />state: New York","year: 1982<br />tavg: 65.5<br />state: New York","year: 1984<br />tavg: 44.0<br />state: New York","year: 1986<br />tavg: 40.0<br />state: New York","year: 1988<br />tavg: 43.5<br />state: New York","year: 1990<br />tavg: 45.5<br />state: New York","year: 1992<br />tavg: 44.0<br />state: New York","year: 1994<br />tavg: 51.5<br />state: New York","year: 1996<br />tavg: 46.5<br />state: New York","year: 1998<br />tavg: 37.5<br />state: New York","year: 2000<br />tavg: 44.0<br />state: New York","year: 2002<br />tavg: 37.5<br />state: New York","year: 2004<br />tavg: 44.0<br />state: New York","year: 2006<br />tavg: 46.5<br />state: New York","year: 2008<br />tavg: 47.5<br />state: New York","year: 2010<br />tavg: 39.0<br />state: New York","year: 2012<br />tavg: 30.5<br />state: New York","year: 2014<br />tavg: 54.0<br />state: New York","year: 2016<br />tavg: 42.5<br />state: New York","year: 2018<br />tavg: 49.0<br />state: New York","year: 2020<br />tavg: 33.0<br />state: New York","year: 2022<br />tavg: 43.5<br />state: New York","year: 2024<br />tavg: 62.0<br />state: New York"],"type":"scatter","mode":"lines+markers","line":{"width":3.0236220472440949,"color":"rgba(0,61,165,1)","dash":"solid"},"hoveron":"points","name":"New York","legendgroup":"New York","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","marker":{"autocolorscale":false,"color":"rgba(0,61,165,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,61,165,1)"}},"frame":null},{"x":[1980,1982,1984,1986,1988,1990,1992,1994,1996,1998,2000,2002,2004,2006,2008,2010,2012,2014,2016,2018,2020,2022,2024],"y":[52.5,68.5,38,47,44,40.5,56,55,51,44,57,43,58,51,58,41.5,39.5,57,50.5,52.5,47,50.5,70.5],"text":["year: 1980<br />tavg: 52.5<br />state: Ohio","year: 1982<br />tavg: 68.5<br />state: Ohio","year: 1984<br />tavg: 38.0<br />state: Ohio","year: 1986<br />tavg: 47.0<br />state: Ohio","year: 1988<br />tavg: 44.0<br />state: Ohio","year: 1990<br />tavg: 40.5<br />state: Ohio","year: 1992<br />tavg: 56.0<br />state: Ohio","year: 1994<br />tavg: 55.0<br />state: Ohio","year: 1996<br />tavg: 51.0<br />state: Ohio","year: 1998<br />tavg: 44.0<br />state: Ohio","year: 2000<br />tavg: 57.0<br />state: Ohio","year: 2002<br />tavg: 43.0<br />state: Ohio","year: 2004<br />tavg: 58.0<br />state: Ohio","year: 2006<br />tavg: 51.0<br />state: Ohio","year: 2008<br />tavg: 58.0<br />state: Ohio","year: 2010<br />tavg: 41.5<br />state: Ohio","year: 2012<br />tavg: 39.5<br />state: Ohio","year: 2014<br />tavg: 57.0<br />state: Ohio","year: 2016<br />tavg: 50.5<br />state: Ohio","year: 2018<br />tavg: 52.5<br />state: Ohio","year: 2020<br />tavg: 47.0<br />state: Ohio","year: 2022<br />tavg: 50.5<br />state: Ohio","year: 2024<br />tavg: 70.5<br />state: Ohio"],"type":"scatter","mode":"lines+markers","line":{"width":3.0236220472440949,"color":"rgba(187,0,0,1)","dash":"solid"},"hoveron":"points","name":"Ohio","legendgroup":"Ohio","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","marker":{"autocolorscale":false,"color":"rgba(187,0,0,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(187,0,0,1)"}},"frame":null},{"x":[1980,1982,1984,1986,1988,1990,1992,1994,1996,1998,2000,2002,2004,2006,2008,2010,2012,2014,2016,2018,2020,2022,2024],"y":[52.5,39,50.5,44,47.5,35.5,37,38,36.5,40.5,30,38.5,37,57.5,44.5,50,54,41,53.5,42.5,55.5,48.5,38],"text":["year: 1980<br />tavg: 52.5<br />state: Utah","year: 1982<br />tavg: 39.0<br />state: Utah","year: 1984<br />tavg: 50.5<br />state: Utah","year: 1986<br />tavg: 44.0<br />state: Utah","year: 1988<br />tavg: 47.5<br />state: Utah","year: 1990<br />tavg: 35.5<br />state: Utah","year: 1992<br />tavg: 37.0<br />state: Utah","year: 1994<br />tavg: 38.0<br />state: Utah","year: 1996<br />tavg: 36.5<br />state: Utah","year: 1998<br />tavg: 40.5<br />state: Utah","year: 2000<br />tavg: 30.0<br />state: Utah","year: 2002<br />tavg: 38.5<br />state: Utah","year: 2004<br />tavg: 37.0<br />state: Utah","year: 2006<br />tavg: 57.5<br />state: Utah","year: 2008<br />tavg: 44.5<br />state: Utah","year: 2010<br />tavg: 50.0<br />state: Utah","year: 2012<br />tavg: 54.0<br />state: Utah","year: 2014<br />tavg: 41.0<br />state: Utah","year: 2016<br />tavg: 53.5<br />state: Utah","year: 2018<br />tavg: 42.5<br />state: Utah","year: 2020<br />tavg: 55.5<br />state: Utah","year: 2022<br />tavg: 48.5<br />state: Utah","year: 2024<br />tavg: 38.0<br />state: Utah"],"type":"scatter","mode":"lines+markers","line":{"width":3.0236220472440949,"color":"rgba(139,69,19,1)","dash":"solid"},"hoveron":"points","name":"Utah","legendgroup":"Utah","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","marker":{"autocolorscale":false,"color":"rgba(139,69,19,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(139,69,19,1)"}},"frame":null}],"layout":{"margin":{"t":43.762557077625573,"r":7.3059360730593621,"b":40.182648401826498,"l":37.260273972602747},"font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"title":{"text":"Average Election Day Temperature Over Time by State","font":{"color":"rgba(0,0,0,1)","family":"","size":17.534246575342465},"x":0,"xref":"paper"},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[1977.8,2026.2],"tickmode":"array","ticktext":["1980","1990","2000","2010","2020"],"tickvals":[1980,1990,2000,2010,2020],"categoryorder":"array","categoryarray":["1980","1990","2000","2010","2020"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"y","title":{"text":"Election Year","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[27.550000000000001,81.450000000000003],"tickmode":"array","ticktext":["30","40","50","60","70","80"],"tickvals":[30,40,50,60,70,80],"categoryorder":"array","categoryarray":["30","40","50","60","70","80"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"x","title":{"text":"Average Temperature (°F)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","layer":"below","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":true,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498},"title":{"text":"State","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"1233c3d1a2802":{"x":{},"y":{},"colour":{},"type":"scatter"},"1233c38baa5":{"x":{},"y":{},"colour":{}}},"cur_data":"1233c3d1a2802","visdat":{"1233c3d1a2802":["function (y) ","x"],"1233c38baa5":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+<p><strong>Interpretation:</strong> The time series reveals that Election Day temperatures have been highly variable across years with no clear long-term warming or cooling trend for most states. Florida shows the most dramatic recent spike, reaching nearly 80°F in 2024 (the warmest recorded). Ohio displays the most erratic pattern with swings from near 40°F to 70°F, reflecting its susceptibility to early-season cold fronts versus warm spells. California shows a slight cooling trend over the decades. Notably, 2020 was unusually cold across multiple states, while 2024 was exceptionally warm. These patterns suggest that Election Day weather remains unpredictable and can vary by 20-30°F between election cycles.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Temperature and Turnout Trends Over Time</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Load voter turnout data and merge with weather data</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>voter_turnout <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/processed-data/voter_turnout_selected_states.csv"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  janitor<span class="sc">::</span><span class="fu">clean_names</span>()</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge weather + turnout by state and year</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>weather_turnout <span class="ot">&lt;-</span> analysis_df <span class="sc">%&gt;%</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    voter_turnout,</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"state"</span>, <span class="st">"year"</span>)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Create faceted plot by state to show both metrics</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>p_faceted <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(weather_turnout, <span class="fu">aes</span>(<span class="at">x =</span> year)) <span class="sc">+</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y =</span> tavg <span class="sc">/</span> <span class="dv">100</span>, <span class="at">color =</span> <span class="st">"Temperature"</span>), <span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y =</span> tavg <span class="sc">/</span> <span class="dv">100</span>, <span class="at">color =</span> <span class="st">"Temperature"</span>), <span class="at">size =</span> <span class="fl">1.5</span>) <span class="sc">+</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">y =</span> vep_turnout_rate, <span class="at">color =</span> <span class="st">"Turnout"</span>), <span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">y =</span> vep_turnout_rate, <span class="at">color =</span> <span class="st">"Turnout"</span>), <span class="at">size =</span> <span class="fl">1.5</span>) <span class="sc">+</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>state, <span class="at">ncol =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">values =</span> <span class="fu">c</span>(<span class="st">"Temperature"</span> <span class="ot">=</span> <span class="st">"#E74C3C"</span>, <span class="st">"Turnout"</span> <span class="ot">=</span> <span class="st">"#3498DB"</span>),</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="st">"Metric"</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="st">"Turnout Rate"</span>,</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">percent_format</span>(),</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">sec.axis =</span> <span class="fu">sec_axis</span>(<span class="sc">~</span>.<span class="sc">*</span><span class="dv">100</span>, <span class="at">name =</span> <span class="st">"Temperature (°F)"</span>)</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Temperature and Voter Turnout Trends Over Time by State"</span>,</span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Red = Temperature (°F) on right axis | Blue = Turnout Rate on left axis"</span>,</span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Election Year"</span></span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"bottom"</span>,</span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">strip.text =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">11</span>),</span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.title.y.left =</span> <span class="fu">element_text</span>(<span class="at">color =</span> <span class="st">"#3498DB"</span>),</span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.title.y.right =</span> <span class="fu">element_text</span>(<span class="at">color =</span> <span class="st">"#E74C3C"</span>),</span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.y.right =</span> <span class="fu">element_text</span>(<span class="at">color =</span> <span class="st">"#E74C3C"</span>)</span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the plot (keeping as static to preserve dual axes)</span></span>
+<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a>p_faceted</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="weather_data_eda_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Interpretation:</strong> Comparing temperature and turnout trends reveals complex state-specific patterns. Most notably, there is no consistent relationship between Election Day temperature and voter turnout across states. For instance:</p>
+<ul>
+<li><strong>Michigan</strong> shows relatively stable high turnout (60-75%) despite significant temperature fluctuations.</li>
+<li><strong>Florida</strong> exhibits high variability in both metrics - turnout ranges from 38% to 71%, while temperatures swing from 54°F to 79°F, yet no clear correlation is evident.</li>
+<li><strong>California</strong> has experienced declining temperatures over time, but turnout remains variable without a clear temperature-driven pattern.</li>
+<li><strong>Presidential election years</strong> (visible as turnout spikes) consistently show higher participation regardless of temperature conditions.</li>
+</ul>
+<p>This suggests that Election Day weather may be less influential on turnout than political factors like election type, candidate quality, and mobilization efforts. The dual-axis visualization reveals that temperature variation (20-30°F swings) occurs alongside both high and low turnout years, indicating weather is not a primary determinant of voter participation in these states.</p>
+<p>```</p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
