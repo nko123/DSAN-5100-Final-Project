@@ -1,0 +1,158 @@
+---
+title: "Results Overview"
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r setup}
+#| include: false
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+```
+
+This section presents the statistical findings from our analysis of voter turnout across six states from 1980 to 2024. We examined multiple socioeconomic and environmental factors to understand what drives electoral participation.
+
+```{r results-summary-viz}
+#| fig-width: 12
+#| fig-height: 8
+#| fig-align: center
+
+# Create summary visualization of key findings
+findings <- data.frame(
+  Factor = c("Partisan Context\n(Swing vs Blue)",
+             "Housing Price Index\n(High vs Low)",
+             "Crime Era\n(Low vs High)",
+             "Weather\n(Temperature)",
+             "Unemployment\nForecasts"),
+  Presidential = c(5.47, 5.0, 6.0, 0.5, NA),
+  Midterm = c(NA, NA, NA, 0.3, 1.0),
+  Category = c("Political", "Economic", "Social", "Environmental", "Time Series"),
+  Significant = c("Yes", "Yes", "Yes", "No", "Yes")
+)
+
+# Create effect size plot for presidential elections
+pres_data <- findings %>%
+  filter(!is.na(Presidential)) %>%
+  mutate(Factor = factor(Factor, levels = rev(Factor)))
+
+ggplot(pres_data, aes(x = Presidential, y = Factor, fill = Significant)) +
+  geom_col(alpha = 0.8) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray40") +
+  scale_fill_manual(values = c("Yes" = "#4575b4", "No" = "#d73027")) +
+  labs(
+    title = "Key Findings: Impact on Voter Turnout",
+    subtitle = "Presidential Elections (1980-2024)",
+    x = "Effect Size (Percentage Points)",
+    y = NULL,
+    fill = "Statistically\nSignificant"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 18, face = "bold", margin = margin(b = 5)),
+    plot.subtitle = element_text(hjust = 0.5, size = 14, margin = margin(b = 15)),
+    axis.text.y = element_text(size = 12),
+    axis.title.x = element_text(size = 12, face = "bold"),
+    legend.position = "right",
+    legend.title = element_text(size = 11, face = "bold"),
+    panel.grid.major.y = element_blank()
+  )
+```
+
+```{r forecast-viz}
+#| fig-width: 12
+#| fig-height: 5
+#| fig-align: center
+
+# Create unemployment forecast visualization
+forecast_data <- data.frame(
+  State = c("Florida", "California", "Michigan"),
+  Current = c(3.5, 4.2, 3.8),
+  Forecast_2026 = c(5.12, 4.98, 4.47),
+  Classification = c("Red", "Blue", "Swing")
+)
+
+forecast_data_long <- forecast_data %>%
+  pivot_longer(cols = c(Current, Forecast_2026),
+               names_to = "Period",
+               values_to = "Unemployment_Rate")
+
+ggplot(forecast_data_long, aes(x = Period, y = Unemployment_Rate,
+                               group = State, color = Classification)) +
+  geom_line(linewidth = 1.5, alpha = 0.8) +
+  geom_point(size = 4) +
+  scale_color_manual(values = c("Red" = "#d73027", "Blue" = "#4575b4", "Swing" = "#fee090")) +
+  scale_x_discrete(labels = c("Current" = "Current (2024)", "Forecast_2026" = "Forecast (2026)")) +
+  labs(
+    title = "Unemployment Forecast: Rising Trends Across States",
+    subtitle = "ARIMA Model Predictions for 2026 Midterm Election",
+    y = "Unemployment Rate (%)",
+    x = NULL,
+    color = "State Type"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", margin = margin(b = 5)),
+    plot.subtitle = element_text(hjust = 0.5, size = 12, margin = margin(b = 15)),
+    axis.title.y = element_text(size = 12, face = "bold"),
+    legend.position = "bottom",
+    legend.title = element_text(size = 11, face = "bold"),
+    panel.grid.minor = element_blank()
+  ) +
+  annotate("text", x = 1.5, y = 5.5,
+           label = "All states project\nincreasing unemployment",
+           size = 4, fontface = "italic", color = "gray30")
+```
+
+## Key Findings Summary
+
+### Partisan Context
+- **Presidential Elections:** Swing states show **5.47% higher turnout** than Blue states (p = 0.0012)
+- **Midterm Elections:** Similar patterns observed but with weaker statistical significance
+- State political identity significantly influences participation
+
+### Economic Factors
+- **Housing Price Index:** High HPI states show **5% higher turnout** in presidential elections (p < 0.001)
+- **Unemployment:** Modest relationship detected in midterm elections
+- **Median Household Income:** Group-level effects present but no specific pairwise differences
+
+### Crime Impact
+- **Presidential Elections:** Medium crime periods associated with higher turnout than high crime periods
+- Voter turnout **4-8 percentage points higher** during low-crime era (2001-2024) vs. high-crime era (1986-2000)
+- **Midterm Elections:** No significant relationship detected
+
+### Weather Conditions
+- **No significant impact** on voter turnout in either presidential or midterm elections
+- Temperature accounts for **less than 1%** of turnout variation
+- Precipitation shows no association with participation rates
+
+### Time Series Forecasting
+All three representative states (Florida, California, Michigan) forecast rising unemployment heading into 2026 midterm:
+
+- **Florida:** +1.62 percentage points
+- **California:** +0.78 percentage points
+- **Michigan:** +0.67 percentage points
+
+## Detailed Results
+
+Use the navigation menu above to explore detailed results for each category:
+
+- **Partisan Party** - State political affiliation and turnout
+- **Economics** - Unemployment, income, and housing price effects
+- **Crime** - Violent crime rates and electoral participation
+- **Weather** - Temperature and precipitation impacts
+- **Time Series** - ARIMA forecasting models and predictions
+
+## Statistical Approach
+
+All analyses were conducted separately for **presidential** and **midterm** elections to account for structural differences in turnout patterns. We employed multiple statistical techniques:
+
+- One-Way ANOVA and Welch's ANOVA
+- Chi-Square Tests of Independence
+- Permutation Tests
+- Bootstrap Resampling
+- ARIMA Time Series Models
+
+Significance was evaluated at **α = 0.05** with appropriate corrections for multiple comparisons.

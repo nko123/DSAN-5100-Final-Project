@@ -1,0 +1,260 @@
+---
+title: "Partisan Party Analysis"
+execute:
+  warning: false
+  message: false
+---
+
+Just as living in a specific state influences individual judgment, it also affects aggregate voter turnout. This section examines the relationship between turnout and state 'color' (Red, Blue, or Swing). We ran separate tests for Presidential and Midterm elections, utilizing ANOVA, pairwise t-tests with Bonferroni correction, and Chi-Square tests.
+
+```{r setup}
+#| include: false
+library(tidyverse)
+library(car)  # For Levene's test
+library(knitr)
+library(kableExtra)
+```
+
+```{r load-data}
+#| include: false
+# Load voter turnout data
+df <- read_csv("data/processed-data/voter_turnout_selected_states.csv") %>%
+  mutate(
+    state_color = factor(state_color, levels = c("red", "blue", "purple")),
+    election_type = factor(election_type),
+    turnout_category = ifelse(normalized_vep_turnout >= 0, "High", "Low")
+  )
+
+# Split by election type
+df_pres <- df %>% filter(election_type == "presidential")
+df_midterm <- df %>% filter(election_type == "midterm")
+```
+
+## Presidential Voter Turnout and State Color
+
+### ANOVA Assumption Testing
+
+```{r normality-pres}
+#| fig-width: 6
+#| fig-height: 5
+#| fig-cap: "Figure 1: Q-Q Plot - Presidential Voter Turnout by State Color"
+
+# Fit ANOVA model
+anova_pres <- aov(vep_turnout_rate ~ state_color, data = df_pres)
+
+# Q-Q plot
+qqnorm(residuals(anova_pres), main = "Q-Q Plot: Presidential Elections")
+qqline(residuals(anova_pres), col = "red", lwd = 2)
+
+# Shapiro-Wilk test
+shapiro_pres <- shapiro.test(residuals(anova_pres))
+```
+
+**Normality Assessment:**
+
+- Shapiro-Wilk p-value: `r round(shapiro_pres$p.value, 4)`
+- Conclusion: Normality assumption is met (p > 0.05)
+
+```{r levene-pres}
+# Levene's test for homogeneity of variance
+levene_pres <- leveneTest(vep_turnout_rate ~ state_color, data = df_pres)
+
+tibble(
+  Test = "Levene's Test",
+  `F-statistic` = round(levene_pres$`F value`[1], 4),
+  df1 = levene_pres$Df[1],
+  df2 = levene_pres$Df[2],
+  `p-value` = round(levene_pres$`Pr(>F)`[1], 4)
+) %>%
+  kable(caption = "Homogeneity of Variance Test (Presidential)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+Since Levene's test p-value < 0.05, homogeneity of variance is **not met**. We use **Welch's ANOVA**.
+
+### Welch's ANOVA Test
+
+```{r welch-anova-pres}
+# Welch's ANOVA (oneway.test with var.equal = FALSE)
+welch_pres <- oneway.test(vep_turnout_rate ~ state_color, data = df_pres, var.equal = FALSE)
+
+tibble(
+  `Source of Variation` = "Color of State",
+  df = paste(round(welch_pres$parameter[1], 2), round(welch_pres$parameter[2], 2), sep = ", "),
+  `F-statistic` = round(welch_pres$statistic, 4),
+  `p-value` = formatC(welch_pres$p.value, format = "e", digits = 4)
+) %>%
+  kable(caption = "Welch's ANOVA: State Color and VEP Turnout Rate (Presidential)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+Given p-value < 0.05, we **reject the null hypothesis**, indicating a statistically significant difference in mean turnout across states.
+
+### Pairwise Comparisons
+
+```{r pairwise-pres}
+# Pairwise t-tests with Bonferroni correction
+pairwise_pres <- pairwise.t.test(df_pres$vep_turnout_rate, df_pres$state_color,
+                                  p.adjust.method = "bonferroni", pool.sd = FALSE)
+
+# Calculate mean differences
+means_pres <- df_pres %>%
+  group_by(state_color) %>%
+  summarise(mean_turnout = mean(vep_turnout_rate, na.rm = TRUE))
+
+tibble(
+  Comparison = c("Red vs. Blue", "Red vs. Swing", "Swing vs. Blue"),
+  `Mean Difference` = c("+2.29%", "-3.17%", "+5.47%"),
+  `p-value` = c(
+    round(pairwise_pres$p.value["blue", "red"], 4),
+    round(pairwise_pres$p.value["purple", "red"], 4),
+    round(pairwise_pres$p.value["purple", "blue"], 4)
+  )
+) %>%
+  kable(caption = "Bonferroni Pairwise Tests (Significance Level: 0.0166)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) %>%
+  row_spec(3, bold = TRUE, color = "white", background = "#28a745")
+```
+
+**Conclusion:** Swing states have **significantly higher voter turnout than Blue states** (p = 0.0012).
+
+### Chi-Square Test
+
+```{r chisq-pres}
+# Contingency table
+cont_table_pres <- table(df_pres$state_color, df_pres$turnout_category)
+
+cont_table_pres %>%
+  kable(caption = "State Color × Voter Turnout (Presidential)",
+        col.names = c("High", "Low")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) %>%
+  column_spec(1, bold = TRUE)
+
+# Chi-square test
+chisq_pres <- chisq.test(cont_table_pres)
+
+tibble(
+  `X-squared` = round(chisq_pres$statistic, 3),
+  df = chisq_pres$parameter,
+  `p-value` = round(chisq_pres$p.value, 4)
+) %>%
+  kable(caption = "Chi-Squared Test (Presidential Election)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+The p-value < 0.05, so we **reject the null hypothesis**. State political color is a statistically significant predictor of Presidential election turnout.
+
+---
+
+## Midterm Voter Turnout and State Color
+
+### ANOVA Assumption Testing
+
+```{r normality-midterm}
+#| fig-width: 6
+#| fig-height: 5
+#| fig-cap: "Figure 2: Q-Q Plot - Midterm Voter Turnout by State Color"
+
+# Fit ANOVA model
+anova_midterm <- aov(vep_turnout_rate ~ state_color, data = df_midterm)
+
+# Q-Q plot
+qqnorm(residuals(anova_midterm), main = "Q-Q Plot: Midterm Elections")
+qqline(residuals(anova_midterm), col = "red", lwd = 2)
+
+# Shapiro-Wilk test
+shapiro_midterm <- shapiro.test(residuals(anova_midterm))
+```
+
+**Normality Assessment:**
+
+- Shapiro-Wilk p-value: `r round(shapiro_midterm$p.value, 4)`
+- Conclusion: Normality assumption is met (p > 0.05)
+
+```{r levene-midterm}
+# Levene's test
+levene_midterm <- leveneTest(vep_turnout_rate ~ state_color, data = df_midterm)
+
+tibble(
+  Test = "Levene's Test",
+  `F-statistic` = round(levene_midterm$`F value`[1], 4),
+  df1 = levene_midterm$Df[1],
+  df2 = levene_midterm$Df[2],
+  `p-value` = round(levene_midterm$`Pr(>F)`[1], 4)
+) %>%
+  kable(caption = "Homogeneity of Variance Test (Midterm)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+Both normality and homogeneity of variance are met. We use **standard ANOVA**.
+
+### Standard ANOVA Test
+
+```{r anova-midterm}
+anova_results_midterm <- summary(anova_midterm)
+
+tibble(
+  `Source of Variation` = "Color of State",
+  df = anova_results_midterm[[1]]["state_color", "Df"],
+  `F-statistic` = round(anova_results_midterm[[1]]["state_color", "F value"], 4),
+  `p-value` = round(anova_results_midterm[[1]]["state_color", "Pr(>F)"], 4)
+) %>%
+  kable(caption = "Standard ANOVA: State Color and VEP Turnout Rate (Midterm)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+Given p-value < 0.05, we **reject the null hypothesis**.
+
+### Pairwise Comparisons
+
+```{r pairwise-midterm}
+# Pairwise t-tests with Bonferroni correction
+pairwise_midterm <- pairwise.t.test(df_midterm$vep_turnout_rate, df_midterm$state_color,
+                                     p.adjust.method = "bonferroni")
+
+tibble(
+  Comparison = c("Red vs. Blue", "Red vs. Swing", "Swing vs. Blue"),
+  `Mean Difference` = c("+1.11%", "-3.84%", "+4.96%"),
+  `p-value` = c(
+    round(pairwise_midterm$p.value["blue", "red"], 2),
+    round(pairwise_midterm$p.value["purple", "red"], 2),
+    round(pairwise_midterm$p.value["purple", "blue"], 2)
+  )
+) %>%
+  kable(caption = "Bonferroni Pairwise Tests (Significance Level: 0.0166)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+Based on pairwise t-tests with Bonferroni correction, we **fail to reject the null hypothesis** (no p-values < 0.0166).
+
+### Chi-Square Test
+
+```{r chisq-midterm}
+# Contingency table
+cont_table_midterm <- table(df_midterm$state_color, df_midterm$turnout_category)
+
+cont_table_midterm %>%
+  kable(caption = "State Color × Voter Turnout (Midterm)",
+        col.names = c("High", "Low")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) %>%
+  column_spec(1, bold = TRUE)
+
+# Chi-square test
+chisq_midterm <- chisq.test(cont_table_midterm)
+
+tibble(
+  `X-squared` = round(chisq_midterm$statistic, 4),
+  df = chisq_midterm$parameter,
+  `p-value` = round(chisq_midterm$p.value, 4)
+) %>%
+  kable(caption = "Chi-Squared Test (Midterm Election)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+The p-value < 0.05, indicating a **statistically significant relationship** between state political color and voter turnout in Midterm elections.
+
+## Summary
+
+- **Presidential Elections:** Strong evidence that state political affiliation influences turnout, particularly swing states vs. blue states
+- **Midterm Elections:** Similar patterns observed but with weaker pairwise significance
+- State political identity plays a meaningful role in electoral participation

@@ -1,0 +1,261 @@
+---
+title: "Weather Analysis"
+execute:
+  warning: false
+  message: false
+---
+
+We conducted two hypothesis tests (chi-square and permutation test) to examine the relationship between Election Day weather conditions and voter turnout, analyzing presidential and midterm elections separately.
+
+```{r setup}
+#| include: false
+library(tidyverse)
+library(janitor)
+library(knitr)
+library(kableExtra)
+```
+
+```{r load-data}
+#| include: false
+# Load weather data
+election_day_weather_df <- read_csv("data/processed-data/election_day_weather_full_cleaned.csv") %>%
+  clean_names() %>%
+  arrange(state, year)
+
+# Load voter turnout data
+voter_turnout_df <- read_csv("data/processed-data/voter_turnout_selected_states.csv") %>%
+  clean_names() %>%
+  arrange(state, year) %>%
+  mutate(
+    turnout_level = ifelse(normalized_vep_turnout < 0, "Low", "High")
+  )
+
+# Merge datasets
+weather_turnout_full <- election_day_weather_df %>%
+  inner_join(voter_turnout_df, by = c("state", "year"))
+
+# Split by election type
+weather_turnout_pres <- weather_turnout_full %>%
+  filter(election_type.x == "Presidential")
+
+weather_turnout_midterm <- weather_turnout_full %>%
+  filter(election_type.x == "Midterm")
+```
+
+## Chi-Square Test: Weather Conditions and Turnout Classification
+
+The chi-square test examined whether weather conditions (Dry/Wet) are associated with voter turnout classification (High/Low).
+
+### Presidential Elections
+
+```{r chi-square-pres}
+# Create contingency table
+contingency_table_pres <- table(weather_turnout_pres$day_type,
+                                weather_turnout_pres$turnout_level)
+
+# Display table
+contingency_table_pres %>%
+  addmargins() %>%
+  kable(caption = "Weather Conditions × Turnout Level (Presidential Elections)",
+        col.names = c("High", "Low", "Total"),
+        align = c("r", "r", "r")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = FALSE) %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, bold = TRUE)
+```
+
+```{r chi-test-pres}
+# Perform chi-square test
+chi_pres <- chisq.test(contingency_table_pres)
+
+# Display results
+tibble(
+  Test = "Chi-squared with Yates' continuity correction",
+  `X-squared` = round(chi_pres$statistic, 5),
+  df = chi_pres$parameter,
+  `p-value` = round(chi_pres$p.value, 4)
+) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+With a p-value (`r round(chi_pres$p.value, 4)`) substantially exceeding the significance threshold of 0.05, we **fail to reject the null hypothesis** of independence. This indicates **no statistically significant association between weather conditions and voter turnout in presidential elections.**
+
+### Midterm Elections
+
+```{r chi-square-midterm}
+# Create contingency table
+contingency_table_midterm <- table(weather_turnout_midterm$day_type,
+                                   weather_turnout_midterm$turnout_level)
+
+# Display table
+contingency_table_midterm %>%
+  addmargins() %>%
+  kable(caption = "Weather Conditions × Turnout Level (Midterm Elections)",
+        col.names = c("High", "Low", "Total"),
+        align = c("r", "r", "r")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = FALSE) %>%
+  row_spec(0, bold = TRUE) %>%
+  column_spec(1, bold = TRUE)
+```
+
+```{r chi-test-midterm}
+# Perform chi-square test
+chi_midterm <- chisq.test(contingency_table_midterm)
+
+# Display results
+tibble(
+  Test = "Chi-squared with Yates' continuity correction",
+  `X-squared` = round(chi_midterm$statistic, 5),
+  df = chi_midterm$parameter,
+  `p-value` = round(chi_midterm$p.value, 4)
+) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+With a p-value of `r round(chi_midterm$p.value, 4)`, we **fail to reject the null hypothesis** of independence. This indicates **no statistically significant association between weather conditions and voter turnout in midterm elections.**
+
+## Permutation Test: Temperature and Turnout Correlation
+
+The permutation test examined whether the average election day temperature had a linear relationship with the voter turnout rate.
+
+### Presidential Elections
+
+```{r perm-test-pres}
+set.seed(5100)
+n_permutations <- 10000
+
+# Calculate observed correlation
+observed_cor_pres <- cor(weather_turnout_pres$tavg,
+                         weather_turnout_pres$vep_turnout_rate,
+                         use = "complete.obs")
+
+# Run permutations
+permuted_cors_pres <- numeric(n_permutations)
+for (i in 1:n_permutations) {
+  shuffled_turnout <- sample(weather_turnout_pres$vep_turnout_rate)
+  permuted_cors_pres[i] <- cor(weather_turnout_pres$tavg,
+                               shuffled_turnout,
+                               use = "complete.obs")
+}
+
+# Calculate p-value
+p_value_pres <- mean(abs(permuted_cors_pres) >= abs(observed_cor_pres))
+
+# Calculate R-squared
+r_squared_pres <- observed_cor_pres^2
+```
+
+```{r perm-results-pres}
+tibble(
+  Metric = c("Pearson correlation (r)", "Permutation p-value", "R²"),
+  Value = c(
+    sprintf("%.6f", observed_cor_pres),
+    sprintf("%.6f", p_value_pres),
+    sprintf("%.4f (%.2f%% variance explained)", r_squared_pres, r_squared_pres * 100)
+  )
+) %>%
+  kable(caption = "Permutation Test Results: Presidential Elections") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+```{r perm-plot-pres}
+#| fig-width: 8
+#| fig-height: 5
+#| fig-cap: "Permutation distribution of correlation between temperature and turnout (Presidential)"
+
+tibble(correlation = permuted_cors_pres) %>%
+  ggplot(aes(x = correlation)) +
+  geom_histogram(bins = 50, fill = "steelblue", color = "black", alpha = 0.7) +
+  geom_vline(xintercept = observed_cor_pres, color = "red",
+             linetype = "dashed", linewidth = 1.0) +
+  geom_vline(xintercept = -observed_cor_pres, color = "red",
+             linetype = "dashed", linewidth = 1.0) +
+  labs(title = "Permutation Distribution: Presidential Elections",
+       subtitle = sprintf("Observed r = %.4f, p-value = %.4f",
+                         observed_cor_pres, p_value_pres),
+       x = "Correlation Coefficient",
+       y = "Frequency") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 14),
+        plot.subtitle = element_text(size = 12))
+```
+
+We **fail to reject the null hypothesis** (p = `r round(p_value_pres, 4)` > 0.05), indicating **no statistically significant linear correlation** between temperature and voter turnout in presidential elections. Temperature explains less than one percent of the variation in turnout.
+
+### Midterm Elections
+
+```{r perm-test-midterm}
+# Calculate observed correlation
+observed_cor_midterm <- cor(weather_turnout_midterm$tavg,
+                            weather_turnout_midterm$vep_turnout_rate,
+                            use = "complete.obs")
+
+# Run permutations
+permuted_cors_midterm <- numeric(n_permutations)
+for (i in 1:n_permutations) {
+  shuffled_turnout <- sample(weather_turnout_midterm$vep_turnout_rate)
+  permuted_cors_midterm[i] <- cor(weather_turnout_midterm$tavg,
+                                  shuffled_turnout,
+                                  use = "complete.obs")
+}
+
+# Calculate p-value
+p_value_midterm <- mean(abs(permuted_cors_midterm) >= abs(observed_cor_midterm))
+
+# Calculate R-squared
+r_squared_midterm <- observed_cor_midterm^2
+```
+
+```{r perm-results-midterm}
+tibble(
+  Metric = c("Pearson correlation (r)", "Permutation p-value", "R²"),
+  Value = c(
+    sprintf("%.6f", observed_cor_midterm),
+    sprintf("%.6f", p_value_midterm),
+    sprintf("%.4f (%.2f%% variance explained)", r_squared_midterm, r_squared_midterm * 100)
+  )
+) %>%
+  kable(caption = "Permutation Test Results: Midterm Elections") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+```{r perm-plot-midterm}
+#| fig-width: 8
+#| fig-height: 5
+#| fig-cap: "Permutation distribution of correlation between temperature and turnout (Midterm)"
+
+tibble(correlation = permuted_cors_midterm) %>%
+  ggplot(aes(x = correlation)) +
+  geom_histogram(bins = 50, fill = "coral", color = "black", alpha = 0.7) +
+  geom_vline(xintercept = observed_cor_midterm, color = "red",
+             linetype = "dashed", linewidth = 1.0) +
+  geom_vline(xintercept = -observed_cor_midterm, color = "red",
+             linetype = "dashed", linewidth = 1.0) +
+  labs(title = "Permutation Distribution: Midterm Elections",
+       subtitle = sprintf("Observed r = %.4f, p-value = %.4f",
+                         observed_cor_midterm, p_value_midterm),
+       x = "Correlation Coefficient",
+       y = "Frequency") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 14),
+        plot.subtitle = element_text(size = 12))
+```
+
+We **fail to reject the null hypothesis** (p = `r round(p_value_midterm, 4)` > 0.05), indicating **no significant linear correlation** between temperature and voter turnout in midterm elections. The variance explained is minimal.
+
+The permutation distributions for both presidential and midterm elections show that the observed correlation coefficients fall within the range of expected values and are centered near zero, indicating that the observed correlations are consistent with random variation and not evidence of a systematic relationship.
+
+## Summary
+
+All four tests failed to achieve statistical significance. This uniform null result across both methodological approaches and both election types provides strong evidence that:
+
+- **Election Day weather does not meaningfully influence voter turnout** in the states and time period examined
+- Weather should **not be considered a meaningful barrier to voting** in elections
+- Temperature accounts for less than 1% of turnout variation
+- Precipitation (wet vs. dry conditions) shows no association with participation
+
+**Conclusion:** Contrary to conventional wisdom, weather conditions have no significant impact on voter turnout.

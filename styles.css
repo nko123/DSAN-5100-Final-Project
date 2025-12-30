@@ -1,0 +1,287 @@
+/* Custom styles for Voter Turnout Quarto Website */
+
+/* Color Variables */
+:root {
+  --primary-blue: #0066cc;
+  --primary-red: #dc3545;
+  --primary-purple: #6f42c1;
+  --accent-gold: #ffc107;
+  --bg-light: #f8f9fa;
+  --text-dark: #212529;
+  --text-muted: #6c757d;
+  --border-light: #dee2e6;
+}
+
+/* Typography Improvements */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7;
+  color: var(--text-dark);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  line-height: 1.3;
+}
+
+h1 {
+  color: var(--primary-blue);
+  border-bottom: 3px solid var(--primary-blue);
+  padding-bottom: 0.5rem;
+}
+
+h2 {
+  color: var(--primary-purple);
+  border-bottom: 2px solid var(--border-light);
+  padding-bottom: 0.3rem;
+}
+
+h3 {
+  color: var(--text-dark);
+}
+
+/* Tables */
+table {
+  width: 100%;
+  margin: 1.5rem 0;
+  border-collapse: collapse;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+thead {
+  background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
+  color: white;
+}
+
+th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+}
+
+td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+tbody tr:hover {
+  background-color: var(--bg-light);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Code Blocks */
+pre {
+  background-color: #2d2d2d;
+  border-radius: 6px;
+  padding: 1.25rem;
+  overflow-x: auto;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin: 1.5rem 0;
+}
+
+code {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+  font-size: 0.9em;
+}
+
+/* Inline code */
+p code, li code, td code {
+  background-color: #f4f4f4;
+  border: 1px solid #e0e0e0;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  color: #c7254e;
+  font-size: 0.9em;
+}
+
+/* Blockquotes */
+blockquote {
+  border-left: 4px solid var(--primary-blue);
+  padding-left: 1.5rem;
+  margin: 1.5rem 0;
+  color: var(--text-muted);
+  font-style: italic;
+  background-color: var(--bg-light);
+  padding: 1rem 1.5rem;
+  border-radius: 0 6px 6px 0;
+}
+
+/* Lists */
+ul, ol {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+li {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+/* Links */
+a {
+  color: var(--primary-blue);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--primary-purple);
+  text-decoration: underline;
+}
+
+/* Navigation Bar */
+.navbar {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+/* Content Boxes */
+.callout {
+  border-left: 5px solid var(--primary-blue);
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  background-color: var(--bg-light);
+  border-radius: 0 6px 6px 0;
+}
+
+.callout-warning {
+  border-left-color: var(--accent-gold);
+  background-color: #fff9e6;
+}
+
+.callout-important {
+  border-left-color: var(--primary-red);
+  background-color: #ffe6e6;
+}
+
+.callout-note {
+  border-left-color: var(--primary-purple);
+  background-color: #f3e5f5;
+}
+
+/* Highlighted Text */
+mark, .mark {
+  background-color: #fff3cd;
+  padding: 0.15rem 0.3rem;
+  border-radius: 3px;
+}
+
+/* Strong/Bold Text with Context */
+strong {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+/* Footer */
+footer {
+  margin-top: 4rem;
+  padding: 2rem 0;
+  border-top: 2px solid var(--border-light);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Responsive Images */
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin: 1.5rem 0;
+}
+
+/* Table of Contents */
+.sidebar nav[role=doc-toc] ul {
+  padding-left: 0;
+  list-style: none;
+}
+
+.sidebar nav[role=doc-toc] li {
+  margin: 0.3rem 0;
+}
+
+.sidebar nav[role=doc-toc] a {
+  color: var(--text-dark);
+  font-size: 0.95rem;
+}
+
+.sidebar nav[role=doc-toc] a:hover {
+  color: var(--primary-blue);
+}
+
+/* Highlight significant results */
+.significant-result {
+  background-color: #d4edda;
+  border-left: 4px solid #28a745;
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 0 6px 6px 0;
+}
+
+.non-significant-result {
+  background-color: #f8d7da;
+  border-left: 4px solid #dc3545;
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 0 6px 6px 0;
+}
+
+/* Print Styles */
+@media print {
+  .navbar, .sidebar {
+    display: none;
+  }
+  
+  body {
+    font-size: 11pt;
+  }
+  
+  h1 {
+    page-break-before: always;
+  }
+  
+  h1:first-of-type {
+    page-break-before: avoid;
+  }
+  
+  table, figure, img {
+    page-break-inside: avoid;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  body {
+    font-size: 16px;
+  }
+  
+  h1 {
+    font-size: 1.75rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  table {
+    font-size: 0.9rem;
+  }
+  
+  th, td {
+    padding: 0.5rem;
+  }
+}

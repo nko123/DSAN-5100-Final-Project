@@ -1,0 +1,330 @@
+---
+title: "Crime Analysis"
+execute:
+  warning: false
+  message: false
+---
+
+We conducted multiple tests (ANOVA, Bonferroni t-tests, and bootstrap) for the crime data to examine if there are significant relationships between voter turnout and violent crime rates. The voter turnout data is split between Presidential and Midterm election cycles.
+
+**Research Question:** Does an increase/decrease in crime lead to an increase/decrease in voter turnout, or does crime have no effect on turnout?
+
+```{r setup}
+#| include: false
+library(tidyverse)
+library(car)
+library(knitr)
+library(kableExtra)
+```
+
+```{r load-data}
+#| include: false
+# Load crime and voter turnout data
+crime <- read_csv("data/processed-data/crime_data_yearly_clean.csv")
+voter <- read_csv("data/processed-data/voter_turnout_selected_states.csv")
+
+# Filter out "United States" and specific observation
+crime <- crime %>%
+  filter(State != "United States") %>%
+  filter(!(State == "Florida" & Year == 1988))
+
+# Join datasets (matching on year and state)
+crime_voter <- crime %>%
+  left_join(voter, by = c("Year" = "year", "State" = "state")) %>%
+  filter(!is.na(normalized_vep_turnout))
+
+# Convert normalized turnout to percentage
+crime_voter <- mutate(crime_voter, normalized_vep_turnout = normalized_vep_turnout * 100)
+
+# Split by election type
+crime_voter_pres <- crime_voter %>% filter(election_type == "presidential")
+crime_voter_midterm <- crime_voter %>% filter(election_type == "midterm")
+```
+
+## Presidential Turnout and Violent Crime
+
+### One-Way ANOVA and Post-Hoc Testing
+
+Violent crime rates were divided into tertiles (low, medium, high) as the independent variable, with normalized voter turnout as the dependent variable.
+
+```{r anova-pres}
+# Categorize into tertiles
+crime_voter_pres <- crime_voter_pres %>%
+  mutate(violent_crime_group = ntile(violent_crime_rate, 3))
+
+# Run ANOVA
+anova_pres <- aov(normalized_vep_turnout ~ factor(violent_crime_group), data = crime_voter_pres)
+anova_results_pres <- summary(anova_pres)
+```
+
+**Assumption Testing:**
+
+```{r normality-pres}
+#| fig-width: 6
+#| fig-height: 5
+#| fig-cap: "Figure 3: Q-Q Plot - Presidential Voter Turnout by Violent Crime Group"
+
+# Q-Q plot
+qqnorm(residuals(anova_pres), main = "Q-Q Plot: Presidential Elections (Crime)")
+qqline(residuals(anova_pres), col = "red", lwd = 2)
+```
+
+```{r levene-pres}
+# Levene's test for homogeneity of variance
+levene_pres <- leveneTest(normalized_vep_turnout ~ factor(violent_crime_group), data = crime_voter_pres)
+
+tibble(
+  Test = "Levene's Test",
+  `F-statistic` = round(levene_pres$`F value`[1], 4),
+  df1 = levene_pres$Df[1],
+  df2 = levene_pres$Df[2],
+  `p-value` = round(levene_pres$`Pr(>F)`[1], 4)
+) %>%
+  kable(caption = "Homogeneity of Variance Test (Presidential)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+- Levene's test p-value: `r round(levene_pres[["Pr(>F)"]][1], 4)` (equal variances confirmed)
+- Q-Q plot: approximate normality confirmed
+
+**ANOVA: Violent Crime Summary**
+
+```{r anova-table-pres}
+tibble(
+  `Source of Variation` = "Violent Crime Group",
+  df = anova_results_pres[[1]]["factor(violent_crime_group)", "Df"],
+  `F-statistic` = round(anova_results_pres[[1]]["factor(violent_crime_group)", "F value"], 3),
+  `p-value` = round(anova_results_pres[[1]]["factor(violent_crime_group)", "Pr(>F)"], 4)
+) %>%
+  kable(caption = "One-Way ANOVA: Violent Crime and VEP Turnout Rate (Presidential)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+The one-way ANOVA indicated a statistically significant difference (F(`r anova_results_pres[[1]]["factor(violent_crime_group)", "Df"]`, `r anova_results_pres[[1]]["Residuals", "Df"]`) = `r round(anova_results_pres[[1]]["factor(violent_crime_group)", "F value"], 2)`, p = `r round(anova_results_pres[[1]]["factor(violent_crime_group)", "Pr(>F)"], 3)`).
+
+**Bonferroni Pairwise Tests:**
+
+```{r pairwise-pres}
+# Extract VEP turnout for each violent crime group
+low_violent <- crime_voter_pres %>% filter(violent_crime_group == 1) %>% pull(normalized_vep_turnout)
+mid_violent <- crime_voter_pres %>% filter(violent_crime_group == 2) %>% pull(normalized_vep_turnout)
+high_violent <- crime_voter_pres %>% filter(violent_crime_group == 3) %>% pull(normalized_vep_turnout)
+
+# Bonferroni-corrected alpha
+alpha_bonf <- 0.05 / 3
+
+# Pairwise t-tests
+ttest_low_mid <- t.test(low_violent, mid_violent, var.equal = FALSE)
+ttest_low_high <- t.test(low_violent, high_violent, var.equal = FALSE)
+ttest_mid_high <- t.test(mid_violent, high_violent, var.equal = FALSE)
+
+# Create results table
+tibble(
+  Comparison = c("Low vs Mid", "Low vs High", "Mid vs High"),
+  `Mean Difference` = c(
+    sprintf("%.2f", mean(low_violent, na.rm = TRUE) - mean(mid_violent, na.rm = TRUE)),
+    sprintf("%.2f", mean(low_violent, na.rm = TRUE) - mean(high_violent, na.rm = TRUE)),
+    sprintf("%.2f", mean(mid_violent, na.rm = TRUE) - mean(high_violent, na.rm = TRUE))
+  ),
+  `Adjusted p-value` = c(
+    round(ttest_low_mid$p.value, 3),
+    round(ttest_low_high$p.value, 3),
+    round(ttest_mid_high$p.value, 3)
+  )
+) %>%
+  kable(caption = "Bonferroni Pairwise Tests (Significance Level: 0.0167)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) %>%
+  row_spec(3, bold = TRUE, color = "white", background = "#28a745")
+```
+
+There is a statistically significant difference between medium-crime and high-crime groups. **Normalized voter turnout is approximately `r abs(round(mean(mid_violent, na.rm = TRUE) - mean(high_violent, na.rm = TRUE), 2))` percentage points higher in medium-crime elections than in high-crime elections.**
+
+### Bootstrap Analysis: High- vs. Low-Crime Eras
+
+Violent crime rates show a clear temporal distinction before and after 2001. We applied bootstrap resampling to compare mean normalized voter turnout between:
+
+- **High-crime era:** 1986–2000
+- **Low-crime era:** 2001–2024
+
+```{r crime-trend}
+#| fig-width: 10
+#| fig-height: 6
+#| fig-cap: "Figure 4: Violent Crime Breakdown by Offense Type"
+
+# Read crime data including United States
+crime_all <- read_csv("data/processed-data/crime_data_yearly_clean.csv") %>%
+  filter(!(State == "Florida" & Year == 1988))
+
+# Plot with all states including United States
+ggplot(crime_all, aes(x = Year, y = violent_crime_rate, color = State)) +
+  geom_line(linewidth = 1.0) +
+  scale_color_manual(values = c(
+    "United States" = "black",
+    "California" = "#E69F00",
+    "Florida" = "#F0E442",
+    "Michigan" = "#56B4E9",
+    "New York" = "#CC79A7",
+    "Ohio" = "#009E73",
+    "Utah" = "#D55E00"
+  )) +
+  labs(
+    title = "Violent Crime Breakdown by Offense Type",
+    x = "Year",
+    y = NULL
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    legend.position = "top",
+    legend.title = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 1),
+    panel.grid.minor = element_blank()
+  )
+```
+
+```{r bootstrap-pres}
+# Create crime era variable
+crime_voter_pres$crime_era <- ifelse(crime_voter_pres$Year < 2001, "High_crime_era", "Low_crime_era")
+
+high_era <- crime_voter_pres$normalized_vep_turnout[crime_voter_pres$crime_era == "High_crime_era"]
+low_era <- crime_voter_pres$normalized_vep_turnout[crime_voter_pres$crime_era == "Low_crime_era"]
+
+# Bootstrap resampling
+set.seed(100)
+boot_diff_pres <- replicate(5000, {
+  mean(sample(low_era, replace = TRUE)) -
+  mean(sample(high_era, replace = TRUE))
+})
+
+ci_pres <- quantile(boot_diff_pres, c(0.025, 0.975))
+```
+
+```{r bootstrap-plot-pres}
+#| fig-width: 8
+#| fig-height: 5
+#| fig-cap: "Figure 5: Bootstrap Distribution of Mean Presidential Turnout Difference (Low – High Crime Era)"
+
+hist(boot_diff_pres, breaks = 30,
+     main = "Bootstrap Distribution: Presidential Elections",
+     xlab = "Difference in Means (Low - High Crime Era)",
+     col = "steelblue", border = "black")
+abline(v = ci_pres, col = "red", lty = 2, lwd = 2)
+legend("topright", legend = "95% CI", col = "red", lty = 2, lwd = 2)
+```
+
+Using 5,000 bootstrap resamples, we estimated the mean difference and constructed a 95% confidence interval.
+
+**Bootstrap Results:**
+
+- **95% CI:** [`r round(ci_pres[1], 2)`, `r round(ci_pres[2], 2)`]
+- **Conclusion:** Reject null hypothesis
+
+Presidential elections during the low-crime era exhibit approximately **`r round(ci_pres[1], 2)` to `r round(ci_pres[2], 2)` percentage points higher** normalized voter turnout compared to elections during the high-crime era.
+
+## Midterm Turnout and Violent Crime
+
+### One-Way ANOVA
+
+```{r anova-midterm}
+# Categorize into tertiles
+crime_voter_midterm <- crime_voter_midterm %>%
+  mutate(violent_crime_group = ntile(violent_crime_rate, 3))
+
+# Run ANOVA
+anova_midterm <- aov(normalized_vep_turnout ~ factor(violent_crime_group), data = crime_voter_midterm)
+anova_results_midterm <- summary(anova_midterm)
+```
+
+**Assumption Testing:**
+
+```{r normality-midterm}
+#| fig-width: 6
+#| fig-height: 5
+#| fig-cap: "Figure 6: Q-Q Plot - Midterm Voter Turnout by Violent Crime Group"
+
+# Q-Q plot
+qqnorm(residuals(anova_midterm), main = "Q-Q Plot: Midterm Elections (Crime)")
+qqline(residuals(anova_midterm), col = "red", lwd = 2)
+```
+
+```{r levene-midterm}
+# Levene's test
+levene_midterm <- leveneTest(normalized_vep_turnout ~ factor(violent_crime_group), data = crime_voter_midterm)
+
+tibble(
+  Test = "Levene's Test",
+  `F-statistic` = round(levene_midterm$`F value`[1], 4),
+  df1 = levene_midterm$Df[1],
+  df2 = levene_midterm$Df[2],
+  `p-value` = round(levene_midterm$`Pr(>F)`[1], 4)
+) %>%
+  kable(caption = "Homogeneity of Variance Test (Midterm)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+- Levene's test p-value: `r round(levene_midterm[["Pr(>F)"]][1], 4)` (equal variances confirmed)
+- Q-Q plot: approximate normality with minor tail deviations
+
+**ANOVA: Violent Crime Summary**
+
+```{r anova-table-midterm}
+tibble(
+  `Source of Variation` = "Violent Crime Group",
+  df = anova_results_midterm[[1]]["factor(violent_crime_group)", "Df"],
+  `F-statistic` = round(anova_results_midterm[[1]]["factor(violent_crime_group)", "F value"], 3),
+  `p-value` = round(anova_results_midterm[[1]]["factor(violent_crime_group)", "Pr(>F)"], 3)
+) %>%
+  kable(caption = "One-Way ANOVA: Violent Crime and VEP Turnout Rate (Midterm)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+The ANOVA was not statistically significant (p = `r round(anova_results_midterm[[1]]["factor(violent_crime_group)", "Pr(>F)"], 3)`). We fail to reject the null hypothesis. **Midterm voter turnout does not differ meaningfully across violent crime rate groupings.**
+
+### Bootstrap Analysis: High- vs. Low-Crime Eras
+
+Using the same framework as presidential elections:
+
+```{r bootstrap-midterm}
+# Create crime era variable
+crime_voter_midterm$crime_era <- ifelse(crime_voter_midterm$Year < 2001, "High_crime_era", "Low_crime_era")
+
+high_era_mid <- crime_voter_midterm$normalized_vep_turnout[crime_voter_midterm$crime_era == "High_crime_era"]
+low_era_mid <- crime_voter_midterm$normalized_vep_turnout[crime_voter_midterm$crime_era == "Low_crime_era"]
+
+# Bootstrap resampling
+set.seed(100)
+boot_diff_midterm <- replicate(5000, {
+  mean(sample(low_era_mid, replace = TRUE)) -
+  mean(sample(high_era_mid, replace = TRUE))
+})
+
+ci_midterm <- quantile(boot_diff_midterm, c(0.025, 0.975))
+```
+
+```{r bootstrap-plot-midterm}
+#| fig-width: 8
+#| fig-height: 5
+#| fig-cap: "Figure 7: Bootstrap Distribution of Mean Midterm Turnout Difference (Low – High Crime Era)"
+
+hist(boot_diff_midterm, breaks = 30,
+     main = "Bootstrap Distribution: Midterm Elections",
+     xlab = "Difference in Means (Low - High Crime Era)",
+     col = "coral", border = "black")
+abline(v = ci_midterm, col = "red", lty = 2, lwd = 2)
+legend("topright", legend = "95% CI", col = "red", lty = 2, lwd = 2)
+```
+
+**Bootstrap Results:**
+
+- **95% CI:** [`r round(ci_midterm[1], 2)`, `r round(ci_midterm[2], 2)`]
+- **Conclusion:** Fail to reject null hypothesis
+
+The confidence interval includes zero, suggesting that **normalized midterm voter turnout is broadly similar across the two crime eras.**
+
+## Summary
+
+- **Presidential Elections:** Strong evidence that crime influences turnout
+  - Medium crime > High crime (`r abs(round(mean(mid_violent, na.rm = TRUE) - mean(high_violent, na.rm = TRUE), 2))` percentage points)
+  - Low-crime era > High-crime era (`r round(ci_pres[1], 1)`-`r round(ci_pres[2], 1)` percentage points)
+- **Midterm Elections:** No significant relationship detected
+- **Interpretation:** Crime-related concerns may exert greater influence on voter mobilization in presidential contests compared to midterm elections

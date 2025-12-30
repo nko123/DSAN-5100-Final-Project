@@ -1,0 +1,39 @@
+---
+title: "References"
+---
+## Academic References
+
+Gamage, P. (2026). *Applied Time Series for Data Science*. Georgetown University.
+
+## Data Sources
+
+Federal Bureau of Investigation. (n.d.). *Crime Data Explorer*. Retrieved December 2024, from https://cde.ucr.cjis.gov/LATEST/webapp/#/pages/explorer/crime/crime-trend
+
+Federal Reserve Bank of St. Louis. (n.d.). *Federal Reserve Economic Data (FRED)*. Retrieved December 2024, from https://fred.stlouisfed.org/
+
+Florida Division of Elections. (n.d.). *Official election results: November 4, 1980*. Retrieved December 2024, from https://results.elections.myflorida.com/Index.asp?ElectionDate=11/4/1980&DATAMODE=
+
+International Institute for Democracy and Electoral Assistance. (n.d.). *Voter turnout database*. Retrieved December 2024, from https://www.idea.int/data-tools/data/voter-turnout-database
+
+National Oceanic and Atmospheric Administration. (n.d.). *NOAA data and information services*. Retrieved December 2024, from https://www.noaa.gov/
+
+U.S. Census Bureau. (n.d.). *Historical educational attainment tables*. Retrieved December 2024, from https://www.census.gov/data/tables/time-series/demo/educational-attainment/cps-historical-time-series.html
+
+University of Florida Election Lab. (n.d.). *Voter turnout data*. Retrieved December 2024, from https://election.lab.ufl.edu/voter-turnout/
+
+
+## Software and Tools
+
+R Core Team. (2024). *R: A language and environment for statistical computing*. R Foundation for Statistical Computing. https://www.R-project.org/
+
+Wickham, H., Averick, M., Bryan, J., Chang, W., McGowan, L., François, R., Grolemund, G., Hayes, A., Henry, L., Hester, J., Kuhn, M., Pedersen, T., Miller, E., Bache, S., Müller, K., Ooms, J., Robinson, D., Seidel, D., Spinu, V., ... Yutani, H. (2019). Welcome to the Tidyverse. *Journal of Open Source Software*, 4(43), 1686.
+
+Allaire, J. J., Teague, C., Scheidegger, C., Xie, Y., & Dervieux, C. (2024). *Quarto*. https://quarto.org
+
+Hyndman, R., Athanasopoulos, G., Bergmeir, C., Caceres, G., Chhay, L., O'Hara-Wild, M., Petropoulos, F., Razbash, S., Wang, E., & Yasmeen, F. (2024). *forecast: Forecasting functions for time series and linear models*. R package version 8.22.0. https://pkg.robjhyndman.com/forecast/
+
+Zhu, H. (2024). *kableExtra: Construct complex table with 'kable' and pipe syntax*. R package version 1.4.0. https://CRAN.R-project.org/package=kableExtra
+
+## Repository
+
+Source code and data: https://github.com/np767/DSAN-5100-Final-Project

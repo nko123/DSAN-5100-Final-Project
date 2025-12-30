@@ -1,0 +1,57 @@
+project:
+  type: website
+  output-dir: docs
+  render:
+    - "*.qmd"
+    - "!*-data-*.qmd"
+    - "!*-data-*.Rmd"
+    - "!*-eda.Rmd"
+    - "!*-testing*.qmd"
+    - "!*-testing*.Rmd"
+    - "!scripts/"
+
+website:
+  title: "Voter Turnout Analysis"
+  navbar:
+    background: primary
+    search: true
+    left:
+      - text: "Home"
+        href: index.qmd
+      - text: "Methods"
+        href: methods.qmd
+      - text: "Results"
+        menu:
+          - text: "Overview"
+            href: results.qmd
+          - text: "---"
+          - text: "Partisan Party"
+            href: results-partisan.qmd
+          - text: "Economics"
+            href: results-economics.qmd
+          - text: "Crime"
+            href: results-crime.qmd
+          - text: "Weather"
+            href: results-weather.qmd
+          - text: "Time Series"
+            href: results-timeseries.qmd
+      - text: "Conclusion"
+        href: conclusion.qmd
+      - text: "References"
+        href: references.qmd
+      - text: "Appendix"
+        href: appendix.qmd
+    right:
+      - icon: github
+        href: https://github.com/np767/DSAN-5100-Final-Project
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    code-tools: true
+    anchor-sections: true
+    smooth-scroll: true

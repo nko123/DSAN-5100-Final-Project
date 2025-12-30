@@ -1,0 +1,164 @@
+---
+title: "Socioeconomic and Structural Determinants for Voter Turnout in the U.S. Elections"
+subtitle: "DSAN 5100 - Probabilistic Modeling and Statistical Computing"
+author:
+  - Pavlos Baffes
+  - Noelle Martell
+  - Younghoon (Eric) Kim
+  - Nkemdibe Okweye
+  - Nikhil Patla
+date: "December 17, 2025"
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r setup}
+#| include: false
+library(tidyverse)
+library(maps)
+library(knitr)
+library(kableExtra)
+```
+
+```{r cover-viz}
+#| fig-width: 12
+#| fig-height: 8
+#| fig-align: center
+
+# Create study overview visualization
+states_data <- data.frame(
+  state = c("Florida", "Utah", "California", "New York", "Ohio", "Michigan"),
+  classification = c("Red", "Red", "Blue", "Blue", "Swing", "Swing"),
+  lat = c(28.5, 39.5, 37.0, 43.0, 40.5, 44.5),
+  lon = c(-82.0, -111.5, -120.0, -75.0, -82.5, -85.0)
+)
+
+# Get US map data
+us_map <- map_data("state")
+
+# Highlight selected states
+selected_states <- tolower(states_data$state)
+us_map$selected <- us_map$region %in% selected_states
+
+# Assign colors based on classification
+state_colors <- states_data %>%
+  mutate(state_lower = tolower(state)) %>%
+  select(state_lower, classification)
+
+us_map <- us_map %>%
+  left_join(state_colors, by = c("region" = "state_lower"))
+
+# Create map
+ggplot(us_map, aes(x = long, y = lat, group = group)) +
+  geom_polygon(aes(fill = classification), color = "white", linewidth = 0.3) +
+  scale_fill_manual(
+    values = c("Red" = "#d73027", "Blue" = "#4575b4", "Swing" = "#6e20dbff"),
+    na.value = "gray90",
+    name = "State Classification"
+  ) +
+  coord_fixed(1.3) +
+  labs(
+    title = "Study Coverage: Six States Across Political Spectrum",
+    subtitle = "Red States (FL, UT) • Blue States (CA, NY) • Swing States (OH, MI)"
+  ) +
+  theme_void() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 18, face = "bold", margin = margin(b = 5)),
+    plot.subtitle = element_text(hjust = 0.5, size = 14, margin = margin(b = 15)),
+    legend.position = "bottom",
+    legend.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 11)
+  )
+```
+
+
+## Introduction
+
+Voter turnout in the United States varies dramatically from state to state and election to election, raising questions about what actually drives people to the polls. Despite voting being a constitutional right that allows citizens to shape their government and communities, participation rates remain uneven. Some communities consistently turn out in high numbers while others see barely half of eligible voters show up, even in presidential elections.
+
+The standard explanation centers on civic duty or political engagement, but that misses something. People are dealing with rent hikes, job instability, rising crime, the daily stress of making ends meet. The question becomes: **do these real-world conditions actually influence whether people vote?**
+
+If cost of living jumps between election cycles, does turnout shift? If unemployment spikes, does participation change? The tension is whether voting behavior stays stable regardless of external circumstances or whether it responds to the conditions people are living through. If turnout is responsive to these pressures, then understanding participation requires identifying what tangible factors shape whether people make it to the polls.
+
+## Research Question
+
+**Do socioeconomic pressures like unemployment, housing affordability, crime rates, and cost of living predict voter turnout better than civic obligation alone?**
+
+We hypothesize that socioeconomic pressures create practical barriers to participation or shift how people prioritize political engagement when they're dealing with economic strain. The central question is whether these external conditions have become stronger predictors of turnout than civic obligation alone.
+
+## Study Design
+
+### States Analyzed
+
+We selected six states with different political leanings:
+
+- **Red States:** Florida, Utah
+- **Blue States:** California, New York
+- **Swing States:** Ohio, Michigan
+
+This setup lets us see whether socioeconomic factors influence turnout the same way everywhere or if the effects depend on political context.
+
+### Time Period
+
+**1980-2024** spanning 23 elections (12 presidential, 11 midterm)
+
+This covers multiple economic cycles, recessions, growth periods, and varying levels of political polarization. Spanning four decades means we can look at correlations between socioeconomic conditions and turnout at specific points in time and also see whether changes in these conditions between elections predict shifts in participation.
+
+## Variables
+```{r overview-image}
+#| fig-align: center
+#| out-width: "100%"
+
+knitr::include_graphics("images/overview.png")
+```
+
+**Economic Indicators:**
+
+- Median Household Income
+- Unemployment Rate
+- Housing Price Index (affordability measure)
+
+**Social Factors:**
+
+- Violent Crime Rates (per 100,000 people)
+
+**Environmental Conditions:**
+
+- Election Day Weather (temperature, precipitation)
+
+**Political Context:**
+
+- State Political Affiliation (Red/Blue/Swing)
+- Election Type (Presidential vs. Midterm)
+
+## Data Sources
+
+All data comes from authoritative government sources:
+
+| Variable | Source | Coverage Years |
+|----------|--------|----------------|
+| **Voter Turnout** | University of Florida Election Lab | 1980-2024 |
+| **Economic Data** | Federal Reserve Economic Data (FRED) | 1975-2024 |
+| **Crime Statistics** | FBI Crime Data Explorer | 1986-2024 |
+| **Weather Data** | NOAA API | 1980-2024 |
+
+
+## Analytical Approach
+
+Our approach combines:
+
+- **Correlation analysis** to identify associations between socioeconomic factors and turnout
+- **Hypothesis testing** to compare turnout between groups (high vs. low income, high vs. low unemployment)
+- **Time series analysis** to examine whether changes in conditions between cycles predict turnout shifts
+
+The goal is pinpointing trends that can predict whether a given election will see high or low turnout based on socioeconomic conditions.
+
+## Team
+
+**Group 6 - DSAN 5100: Probabilistic Modeling and Statistical Computing**
+
+Georgetown University, Fall 2025
+
+**Instructor:** Dr. Purna Gamage
